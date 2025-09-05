@@ -22,6 +22,7 @@ const customerRoutes = require("./server/routes/customerRoutes");
 app.use("/customer", customerRoutes);
 
 
+
 // MongoDB connection
 mongoose.connect(process.env.MONGO_URI)
   .then(() => console.log("✅ MongoDB connected"))

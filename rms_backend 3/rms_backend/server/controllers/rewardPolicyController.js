@@ -1,4 +1,5 @@
 const RewardPolicy = require("../models/RewardPolicy");
+const Transaction = require("../models/Transaction");
 
 // Create or update a reward policy
 exports.createOrUpdatePolicy = async (req, res) => {
@@ -6,15 +7,12 @@ exports.createOrUpdatePolicy = async (req, res) => {
     const adminId = req.user.id; // from JWT
     const data = req.body;
 
-    // check if admin already has a policy
     let policy = await RewardPolicy.findOne({ adminId });
 
     if (policy) {
-      // update
       policy = await RewardPolicy.findOneAndUpdate({ adminId }, data, { new: true });
       return res.json({ message: "Policy updated", policy });
     } else {
-      // create
       policy = await RewardPolicy.create({ ...data, adminId });
       return res.status(201).json({ message: "Policy created", policy });
     }
@@ -23,24 +21,19 @@ exports.createOrUpdatePolicy = async (req, res) => {
   }
 };
 
+// Add or update threshold rule
 exports.addOrUpdateThreshold = async (req, res) => {
   try {
     const adminId = req.user.id;
     const { minAmount, bonusPoints } = req.body;//aa
 
-    // Find admin's policy
     let policy = await RewardPolicy.findOne({ adminId });
-    if (!policy) {
-      return res.status(404).json({ message: "No policy found. Create one first." });
-    }
+    if (!policy) return res.status(404).json({ message: "No policy found. Create one first." });
 
-    // Check if threshold already exists
     const thresholdIndex = policy.spendThresholds.findIndex(t => t.minAmount === minAmount);
     if (thresholdIndex !== -1) {
-      // Update existing threshold
       policy.spendThresholds[thresholdIndex].bonusPoints = bonusPoints;
     } else {
-      // Add new threshold
       policy.spendThresholds.push({ minAmount, bonusPoints });
     }
 
@@ -51,50 +44,70 @@ exports.addOrUpdateThreshold = async (req, res) => {
   }
 };
 
+// Add or update category rule
 exports.addOrUpdateCategoryRule = async (req, res) => {
   try {
-    const adminId = req.user.id; // from JWT
+    const adminId = req.user.id;
     const { category, pointsPer100, minAmount, bonusPoints } = req.body;
 
-    // find policy of the admin
     let policy = await RewardPolicy.findOne({ adminId });
-    if (!policy) {
-      return res.status(404).json({ message: "No policy found. Please create one first." });
-    }
+    if (!policy) return res.status(404).json({ message: "No policy found. Please create one first." });
 
-    // check if category already exists
     const categoryIndex = policy.categoryRules.findIndex(rule => rule.category === category);
-
     if (categoryIndex !== -1) {
-      // update existing rule
-      policy.categoryRules[categoryIndex] = {
-        category,
-        pointsPer100,
-        minAmount,
-        bonusPoints
-      };
+      policy.categoryRules[categoryIndex] = { category, pointsPer100, minAmount, bonusPoints };
     } else {
-      // add new rule
       policy.categoryRules.push({ category, pointsPer100, minAmount, bonusPoints });
     }
 
     await policy.save();
-
     res.json({ message: "Category rule added/updated", policy });
   } catch (err) {
     res.status(500).json({ message: err.message });
   }
 };
 
+// ✅ Add or update tier rule
+exports.addOrUpdateTierRule = async (req, res) => {
+  try {
+    const adminId = req.user.id;
+    const { tierName, minPoints, multiplier, benefits } = req.body;
 
-const Transaction = require("../models/Transaction");
+    let policy = await RewardPolicy.findOne({ adminId });
+    if (!policy) return res.status(404).json({ message: "No policy found. Please create one first." });
 
-// GET /api/policy/summary
+    const tierIndex = policy.tierRules.findIndex(t => t.tierName === tierName);
+    if (tierIndex !== -1) {
+      // Update
+      policy.tierRules[tierIndex] = { tierName, minPoints, multiplier, benefits };
+    } else {
+      // Add new
+      policy.tierRules.push({ tierName, minPoints, multiplier, benefits });
+    }
+
+    await policy.save();
+    res.json({ message: "Tier rule added/updated", policy });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+};
+
+// ✅ Get all tier rules
+exports.getTierRules = async (req, res) => {
+  try {
+    const policy = await RewardPolicy.findOne({ adminId: req.user.id });
+    if (!policy) return res.status(404).json({ message: "No policy found" });
+
+    res.json(policy.tierRules);
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+};
+
+// Get policy summary
 exports.getPolicySummary = async (req, res) => {
   try {
-    const adminId = req.user.id; // from JWT
-
-    // Aggregate transactions of this admin
+    const adminId = req.user.id;
     const transactions = await Transaction.find({ adminId });
 
     if (transactions.length === 0) {
@@ -111,12 +124,7 @@ exports.getPolicySummary = async (req, res) => {
     const totalPointsRedeemed = transactions.reduce((sum, t) => sum + (t.redeemedPoints || 0), 0);
     const outstandingPoints = totalPointsIssued - totalPointsRedeemed;
 
-    res.json({
-      totalTransactions,
-      totalPointsIssued,
-      totalPointsRedeemed,
-      outstandingPoints,
-    });
+    res.json({ totalTransactions, totalPointsIssued, totalPointsRedeemed, outstandingPoints });
   } catch (err) {
     res.status(500).json({ message: err.message });
   }
