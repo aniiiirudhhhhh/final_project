@@ -26,7 +26,7 @@ exports.createOrUpdatePolicy = async (req, res) => {
 exports.addOrUpdateThreshold = async (req, res) => {
   try {
     const adminId = req.user.id;
-    const { minAmount, bonusPoints } = req.body;
+    const { minAmount, bonusPoints } = req.body;//aa
 
     // Find admin's policy
     let policy = await RewardPolicy.findOne({ adminId });
