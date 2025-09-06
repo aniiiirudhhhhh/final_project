@@ -1,7 +1,7 @@
 const RewardPolicy = require("../models/RewardPolicy");
 const Transaction = require("../models/Transaction");
 
-// Create or update a reward policy
+// ✅ Create or update a reward policy
 exports.createOrUpdatePolicy = async (req, res) => {
   try {
     const adminId = req.user.id; // from JWT
@@ -10,12 +10,34 @@ exports.createOrUpdatePolicy = async (req, res) => {
     let policy = await RewardPolicy.findOne({ adminId });
 
     if (policy) {
-      policy = await RewardPolicy.findOneAndUpdate({ adminId }, data, { new: true });
+      policy = await RewardPolicy.findOneAndUpdate(
+        { adminId },
+        { ...data, pointsExpiryDays: data.pointsExpiryDays || policy.pointsExpiryDays },
+        { new: true }
+      );
       return res.json({ message: "Policy updated", policy });
     } else {
       policy = await RewardPolicy.create({ ...data, adminId });
       return res.status(201).json({ message: "Policy created", policy });
     }
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+};
+
+// ✅ Update points expiry separately
+exports.updatePointsExpiry = async (req, res) => {
+  try {
+    const adminId = req.user.id;
+    const { pointsExpiryDays } = req.body;
+
+    const policy = await RewardPolicy.findOne({ adminId });
+    if (!policy) return res.status(404).json({ message: "No policy found" });
+
+    policy.pointsExpiryDays = pointsExpiryDays;
+    await policy.save();
+
+    res.json({ message: "Points expiry updated", policy });
   } catch (err) {
     res.status(500).json({ message: err.message });
   }
@@ -67,7 +89,7 @@ exports.addOrUpdateCategoryRule = async (req, res) => {
   }
 };
 
-// ✅ Add or update tier rule
+// Add or update tier rule
 exports.addOrUpdateTierRule = async (req, res) => {
   try {
     const adminId = req.user.id;
@@ -78,10 +100,8 @@ exports.addOrUpdateTierRule = async (req, res) => {
 
     const tierIndex = policy.tierRules.findIndex(t => t.tierName === tierName);
     if (tierIndex !== -1) {
-      // Update
       policy.tierRules[tierIndex] = { tierName, minPoints, multiplier, benefits };
     } else {
-      // Add new
       policy.tierRules.push({ tierName, minPoints, multiplier, benefits });
     }
 
@@ -92,7 +112,7 @@ exports.addOrUpdateTierRule = async (req, res) => {
   }
 };
 
-// ✅ Get all tier rules
+// Get all tier rules
 exports.getTierRules = async (req, res) => {
   try {
     const policy = await RewardPolicy.findOne({ adminId: req.user.id });
