@@ -13,7 +13,7 @@ const userSchema = new mongoose.Schema({
   tier: {
     type: String,
     enum: ["Silver", "Gold", "Platinum"],
-    default: "Silver"
+    default: null
   },
   lifetimeSpend: { type: Number, default: 0 }, // track all purchases
 
