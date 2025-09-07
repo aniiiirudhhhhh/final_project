@@ -5,7 +5,11 @@ const Dashboard = () => {
   const navigate = useNavigate();
 
   const handleLogin = (role) => {
-    navigate("/login", { state: { role } }); // pass role to Login.jsx
+    if (role === "admin") {
+    navigate("/login/admin");
+  } else {
+    navigate("/login/customer");
+  } // pass role to Login.jsx
   };
 
   return (

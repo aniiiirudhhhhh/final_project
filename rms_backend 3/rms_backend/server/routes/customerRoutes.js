@@ -4,7 +4,8 @@ const {
   getCustomerProfile, 
   getCustomersByAdmin,
   updateCustomerTier,   // ✅ new
-  getCustomerTier       // ✅ new
+  getCustomerTier,
+  getTopCustomers       // ✅ new
 } = require("../controllers/customerController");
 
 const router = express.Router();
@@ -20,5 +21,7 @@ router.put("/:customerId/tier", protect, isAdmin, updateCustomerTier);
 
 // Customer: view own tier
 router.get("/me/tier", protect, getCustomerTier);
+
+router.get("/top", protect, isAdmin, getTopCustomers);
 
 module.exports = router;

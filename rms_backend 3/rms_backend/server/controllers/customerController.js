@@ -1,5 +1,5 @@
 const User = require("../models/User");
-
+const Transaction= require("../models/Transaction")
 // helper: recalc active balance
 const calculateActivePoints = (pointsHistory) => {
   const now = new Date();
@@ -119,10 +119,46 @@ const getCustomerTier = async (req, res) => {
   }
 };
 
+const getTopCustomers = async (req, res) => {
+  try {
+    // Get all customers for this admin
+    const adminId = req.user._id; // assuming JWT admin
+    const customers = await User.find({ adminId, role: "customer" });
+
+    // Aggregate transactions for all customers
+    const leaderboard = [];
+
+    for (const customer of customers) {
+      // Sum up all their transactions
+      const transactions = await Transaction.find({ customerId: customer._id });
+      const totalSpent = transactions.reduce((sum, t) => sum + (t.amount || 0), 0);
+      const totalPoints = transactions.reduce((sum, t) => sum + (t.earnedPoints || 0), 0);
+
+      leaderboard.push({
+        customerId: customer._id,
+        name: customer.name,
+        email: customer.email,
+        tier: customer.tier || "No tier",
+        totalSpent,
+        totalPoints
+      });
+    }
+
+    // Sort by totalSpent or totalPoints, descending
+    leaderboard.sort((a, b) => b.totalSpent - a.totalSpent); // or b.totalPoints - a.totalPoints
+
+    // Send top N (e.g., 10)
+    res.json(leaderboard.slice(0, 5));
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+};
+
 // ✅ Export all functions
 module.exports = {
   getCustomerProfile,
   getCustomersByAdmin,
   updateCustomerTier,
-  getCustomerTier
+  getCustomerTier,
+  getTopCustomers
 };

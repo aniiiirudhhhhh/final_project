@@ -1,30 +1,35 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
+import { useNavigate, NavLink } from "react-router-dom";
 import API from "../api";
+import { UserCircle, ChevronDown, Menu, X } from "lucide-react";
 
 const Business = () => {
   const [policy, setPolicy] = useState(null);
-  const [form, setForm] = useState({
-    policyName: "",
-    description: "",
-    basePointsPer100: "",
-    redemptionRate: "",
-    minRedeemPoints: "",
-  });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [profileMenuOpen, setProfileMenuOpen] = useState(false);
 
-  const [customers, setCustomers] = useState([]);
-  const [showCustomers, setShowCustomers] = useState(false);
-
-  const [selectedCustomer, setSelectedCustomer] = useState(null); // ✅
-  const [customerHistory, setCustomerHistory] = useState([]); // ✅
-
+  const navigate = useNavigate();
   const user = JSON.parse(localStorage.getItem("user"));
   const token = localStorage.getItem("token");
-  const adminId = user?.user?._id || user?._id;
+
+  // Ref for profile dropdown click outside detection
+  const profileRef = useRef(null);
 
   useEffect(() => {
     fetchPolicy();
+  }, []);
+
+  useEffect(() => {
+    // Close profile menu if clicked outside
+    const handleClickOutside = (event) => {
+      if (profileRef.current && !profileRef.current.contains(event.target)) {
+        setProfileMenuOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
   const fetchPolicy = async () => {
@@ -34,236 +39,250 @@ const Business = () => {
         headers: { Authorization: `Bearer ${token}` },
       });
       setPolicy(res.data);
-      setForm({
-        policyName: res.data.policyName || "",
-        description: res.data.description || "",
-        basePointsPer100: res.data.basePointsPer100 || "",
-        redemptionRate: res.data.redemptionRate || "",
-        minRedeemPoints: res.data.minRedeemPoints || "",
-      });
       setError("");
     } catch (err) {
-      setError("No policy found. Create one!");
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleChange = (e) => {
-    setForm({ ...form, [e.target.name]: e.target.value });
-  };
-
-  const handleSave = async () => {
-    try {
-      setLoading(true);
-      const res = await API.post("/admin/policy", form, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      setPolicy(res.data.policy);
-      alert(res.data.message || "Policy saved successfully");
-    } catch (err) {
-      alert("Error saving policy");
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleDelete = async () => {
-    try {
-      await API.delete("/admin/policy", {
-        headers: { Authorization: `Bearer ${token}` },
-      });
       setPolicy(null);
-      setForm({
-        policyName: "",
-        description: "",
-        basePointsPer100: "",
-        redemptionRate: "",
-        minRedeemPoints: "",
-      });
-      alert("Policy deleted");
-    } catch (err) {
-      alert("Error deleting policy");
+      setError("No policy found. Create a new policy to get started!");
+    } finally {
+      setLoading(false);
     }
   };
 
-  const fetchCustomers = async () => {
-    try {
-      const res = await API.get("/customer/all", {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      setCustomers(res.data);
-      setShowCustomers(true);
-    } catch (err) {
-      alert("Error fetching customers");
-    }
+  const toggleMobileMenu = () => {
+    setMobileMenuOpen((prev) => !prev);
   };
 
-  // ✅ Fetch specific customer’s transaction history
-  const fetchCustomerHistory = async (customerId) => {
-    try {
-      const res = await API.get(`/transactions/customer/${customerId}`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      setSelectedCustomer(res.data.customer);
-      setCustomerHistory(res.data.transactions);
-    } catch (err) {
-      alert("Error fetching customer history");
-    }
+  const toggleProfileMenu = () => {
+    setProfileMenuOpen((prev) => !prev);
   };
+
+  const logout = () => {
+    localStorage.removeItem("token");
+    localStorage.removeItem("user");
+    setProfileMenuOpen(false);
+    navigate("/login/admin");
+  };
+
+  const navLinks = [
+    { name: "Policy", path: "/business/policy" },
+    { name: "Customers", path: "/business/users" },
+    { name: "Tier Management", path: "/business/tiers" },
+    { name: "Analytics", path: "/business/analytics" },
+  ];
 
   return (
-    <div className="p-6">
-      <h2 className="text-2xl font-bold mb-4">Business Reward Policy</h2>
-
-      {/* ✅ Show Admin ID */}
-      <div className="mb-4 p-3 border rounded bg-gray-100">
-        <p className="font-semibold text-gray-700">
-          Your Admin ID:{" "}
-          <span className="text-blue-600 font-mono">{adminId}</span>
-        </p>
-        <p className="text-sm text-gray-500">
-          Share this ID with your customers. They need it to register.
-        </p>
-      </div>
-
-      {loading && <p>Loading...</p>}
-      {error && <p className="text-red-500">{error}</p>}
-
-      <div className="space-y-4">
-        <input
-          type="text"
-          name="policyName"
-          placeholder="Policy Name"
-          value={form.policyName}
-          onChange={handleChange}
-          className="border p-2 w-full"
-        />
-        <textarea
-          name="description"
-          placeholder="Description"
-          value={form.description}
-          onChange={handleChange}
-          className="border p-2 w-full"
-        />
-        <input
-          type="number"
-          name="basePointsPer100"
-          placeholder="Base Points per 100"
-          value={form.basePointsPer100}
-          onChange={handleChange}
-          className="border p-2 w-full"
-        />
-        <input
-          type="number"
-          name="redemptionRate"
-          placeholder="Redemption Rate"
-          value={form.redemptionRate}
-          onChange={handleChange}
-          className="border p-2 w-full"
-        />
-        <input
-          type="number"
-          name="minRedeemPoints"
-          placeholder="Minimum Redeem Points"
-          value={form.minRedeemPoints}
-          onChange={handleChange}
-          className="border p-2 w-full"
-        />
-      </div>
-
-      <div className="flex gap-4 mt-6">
-        <button
-          onClick={handleSave}
-          className="bg-blue-500 text-white px-4 py-2 rounded"
-        >
-          Save Policy
-        </button>
-        {policy && (
-          <button
-            onClick={handleDelete}
-            className="bg-red-500 text-white px-4 py-2 rounded"
+    <div className="min-h-screen bg-gray-50 flex flex-col">
+      {/* Header */}
+      <header className="sticky top-0 bg-white shadow-md z-50">
+        <div className="max-w-7xl mx-auto px-6 py-4 flex justify-between items-center">
+          <h1
+            className="text-2xl font-extrabold text-indigo-700 cursor-pointer"
+            onClick={() => navigate("/business")}
           >
-            Delete Policy
+            Loyalty Program
+          </h1>
+
+          {/* Desktop nav */}
+          <nav className="hidden md:flex items-center space-x-8">
+            {navLinks.map(({ name, path }) => (
+              <NavLink
+                key={name}
+                to={path}
+                className={({ isActive }) =>
+                  isActive
+                    ? "text-indigo-700 font-semibold border-b-2 border-indigo-700 pb-1"
+                    : "text-gray-600 hover:text-indigo-700 transition"
+                }
+              >
+                {name}
+              </NavLink>
+            ))}
+
+            {/* Profile dropdown */}
+            <div className="relative ml-6" ref={profileRef}>
+              <button
+                onClick={toggleProfileMenu}
+                className="flex items-center space-x-2 focus:outline-none focus:ring-2 focus:ring-indigo-500 rounded"
+                aria-haspopup="true"
+                aria-expanded={profileMenuOpen}
+                aria-label="User menu"
+              >
+                <UserCircle className="w-8 h-8 text-indigo-600" />
+                <span className="font-semibold text-gray-700">
+                  {user?.user?.name || "Admin"}
+                </span>
+                <ChevronDown className="w-4 h-4 text-gray-500" />
+              </button>
+
+              {profileMenuOpen && (
+                <div
+                  className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none z-50"
+                  role="menu"
+                  aria-orientation="vertical"
+                  aria-labelledby="user-menu"
+                >
+                  <button
+                    onClick={logout}
+                    className="block w-full text-left px-4 py-2 text-gray-700 hover:bg-indigo-100 hover:text-indigo-900"
+                    role="menuitem"
+                  >
+                    Logout
+                  </button>
+                </div>
+              )}
+            </div>
+          </nav>
+
+          {/* Mobile menu button */}
+          <button
+            onClick={toggleMobileMenu}
+            className="md:hidden inline-flex items-center justify-center p-2 rounded-md text-gray-600 hover:text-indigo-700 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-indigo-500"
+            aria-label="Toggle menu"
+          >
+            {mobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
           </button>
+        </div>
+
+        {/* Mobile nav */}
+        {mobileMenuOpen && (
+          <nav className="md:hidden bg-white shadow-lg border-t border-gray-100">
+            <ul className="flex flex-col space-y-2 py-4 px-6">
+              {navLinks.map(({ name, path }) => (
+                <li key={name}>
+                  <NavLink
+                    to={path}
+                    onClick={() => setMobileMenuOpen(false)}
+                    className={({ isActive }) =>
+                      isActive
+                        ? "block text-indigo-700 font-semibold border-l-4 border-indigo-700 pl-3 py-2"
+                        : "block text-gray-700 hover:text-indigo-700 transition"
+                    }
+                  >
+                    {name}
+                  </NavLink>
+                </li>
+              ))}
+
+              {/* Mobile profile menu */}
+              <li className="pt-4 border-t border-gray-200">
+                <button
+                  onClick={() => {
+                    setMobileMenuOpen(false);
+                    logout();
+                  }}
+                  className="w-full text-left text-gray-700 hover:text-indigo-700 transition px-3 py-2"
+                >
+                  Logout
+                </button>
+              </li>
+            </ul>
+          </nav>
         )}
-        <button
-          onClick={fetchCustomers}
-          className="bg-green-600 text-white px-4 py-2 rounded"
-        >
-          View Customers
-        </button>
-      </div>
+      </header>
 
-      {policy && (
-        <div className="mt-6 border p-4 rounded bg-gray-50">
-          <h3 className="text-lg font-semibold">Current Policy:</h3>
-          <p><strong>Name:</strong> {policy.policyName}</p>
-          <p><strong>Description:</strong> {policy.description}</p>
-          <p><strong>Base Points:</strong> {policy.basePointsPer100} / 100</p>
-          <p><strong>Redemption Rate:</strong> {policy.redemptionRate}</p>
-          <p><strong>Min Redeem Points:</strong> {policy.minRedeemPoints}</p>
-        </div>
-      )}
+      {/* Main Content */}
+      <main className="flex-grow max-w-7xl mx-auto p-6 flex flex-col space-y-10">
+        {/* Welcome */}
+        <section>
+          <h2 className="text-4xl font-bold text-gray-900 mb-3">
+            Welcome,
+            <span className="text-indigo-600 ml-2">
+              {user?.name || "Business"}
+            </span>
+          </h2>
 
-      {/* ✅ Customers list */}
-      {showCustomers && (
-        <div className="mt-6 border p-4 rounded bg-gray-50">
-          <h3 className="text-lg font-semibold mb-3">Associated Customers</h3>
-          {customers.length > 0 ? (
-            <ul className="space-y-3">
-              {customers.map((c) => (
-                <li
-                  key={c._id}
-                  className="border p-3 rounded bg-white shadow-sm cursor-pointer hover:bg-gray-100"
-                  onClick={() => fetchCustomerHistory(c._id)} // ✅ Click to view history
-                >
-                  <p><strong>Name:</strong> {c.name}</p>
-                  <p><strong>Email:</strong> {c.email}</p>
-                  <p><strong>Points:</strong> {c.pointsBalance}</p>
-                  <p><strong>Transactions:</strong> {c.history.length}</p>
-                  <p className="text-blue-600 text-sm">Click to view history ➜</p>
-                </li>
-              ))}
-            </ul>
-          ) : (
-            <p className="text-gray-600">No customers found yet.</p>
+          {user?._id && (
+            <p className="text-sm text-gray-500 mb-4">
+              <strong>Business ID:</strong> {user._id}
+            </p>
           )}
-        </div>
-      )}
+          <p className="text-gray-600 text-lg max-w-xl">
+            Manage your rewards program, customers, tier rules, and analytics to grow your business.
+          </p>
+        </section>
 
-      {/* ✅ Selected customer’s transaction history */}
-      {selectedCustomer && (
-        <div className="mt-6 border p-4 rounded bg-gray-50">
-          <h3 className="text-lg font-semibold mb-3">
-            {selectedCustomer.name}’s Transaction History
-          </h3>
-          <p><strong>Email:</strong> {selectedCustomer.email}</p>
-          <p><strong>Current Points:</strong> {selectedCustomer.pointsBalance}</p>
+        {/* Policy Section */}
+        <section className="bg-white p-6 rounded-xl shadow-md">
+          {loading ? (
+            <p className="text-gray-500">Loading policy...</p>
+          ) : error ? (
+            <div className="text-yellow-900 bg-yellow-100 border border-yellow-300 p-4 rounded flex flex-col max-w-md">
+              <p>{error}</p>
+              <button
+                onClick={() => navigate("/business/policy")}
+                className="mt-4 self-start bg-indigo-600 text-white px-4 py-2 rounded hover:bg-indigo-700 transition"
+              >
+                Create New Policy
+              </button>
+            </div>
+          ) : policy ? (
+            <>
+              <h3 className="text-2xl font-semibold mb-4">Current Reward Policy</h3>
+              <dl className="grid grid-cols-2 gap-y-2 gap-x-10 max-w-xl">
+                <dt className="font-medium text-gray-700">Name:</dt>
+                <dd className="text-gray-900">{policy.policyName}</dd>
 
-          {customerHistory.length > 0 ? (
-            <ul className="mt-4 space-y-3">
-              {customerHistory.map((t) => (
-                <li
-                  key={t._id}
-                  className="border p-3 rounded bg-white shadow-sm"
-                >
-                  <p><strong>Amount:</strong> ${t.amount}</p>
-                  <p><strong>Category:</strong> {t.category}</p>
-                  <p><strong>Earned:</strong> {t.earnedPoints}</p>
-                  <p><strong>Redeemed:</strong> {t.redeemedPoints}</p>
-                  <p><strong>Final Balance:</strong> {t.finalPoints}</p>
-                  <p className="text-xs text-gray-500">
-                    {new Date(t.createdAt).toLocaleString()}
-                  </p>
-                </li>
-              ))}
-            </ul>
-          ) : (
-            <p className="text-gray-600 mt-2">No transactions found.</p>
-          )}
-        </div>
-      )}
+                <dt className="font-medium text-gray-700">Description:</dt>
+                <dd className="text-gray-900">{policy.description}</dd>
+
+                <dt className="font-medium text-gray-700">Base Points:</dt>
+                <dd className="text-gray-900">{policy.basePointsPer100} / 100</dd>
+
+                <dt className="font-medium text-gray-700">Redemption Rate:</dt>
+                <dd className="text-gray-900">{policy.redemptionRate}</dd>
+
+                <dt className="font-medium text-gray-700">Minimum Redeem Points:</dt>
+                <dd className="text-gray-900">{policy.minRedeemPoints}</dd>
+              </dl>
+              <button
+                onClick={() => navigate("/business/policy")}
+                className="mt-6 bg-indigo-600 text-white px-5 py-3 rounded-lg hover:bg-indigo-700 focus:outline-none focus:ring-4 focus:ring-indigo-300 transition"
+              >
+                Edit Policy
+              </button>
+            </>
+          ) : null}
+        </section>
+
+        {/* Sections Grid */}
+        <section className="grid grid-cols-1 md:grid-cols-2 gap-8">
+          {/* Customers Card */}
+          <div className="bg-white p-6 rounded-xl shadow-md flex flex-col">
+            <h3 className="text-2xl font-semibold mb-3">Registered Customers</h3>
+            <p className="flex-grow text-gray-700 mb-6">View and manage your registered customers.</p>
+            <button
+              onClick={() => navigate("/business/users")}
+              className="self-start bg-green-600 text-white px-5 py-3 rounded-lg hover:bg-green-700 focus:outline-none focus:ring-4 focus:ring-green-300 transition"
+            >
+              View Customers
+            </button>
+          </div>
+
+          {/* Tier Management Card */}
+          <div className="bg-white p-6 rounded-xl shadow-md flex flex-col">
+            <h3 className="text-2xl font-semibold mb-3">Tier Management</h3>
+            <p className="flex-grow text-gray-700 mb-6">
+              Manage tier rules like Silver, Gold, Platinum with multipliers and benefits.
+            </p>
+            <button
+              onClick={() => navigate("/business/tiers")}
+              className="self-start bg-indigo-600 text-white px-5 py-3 rounded-lg hover:bg-indigo-700 focus:outline-none focus:ring-4 focus:ring-indigo-300 transition"
+            >
+              Edit Tier Rules
+            </button>
+          </div>
+        </section>
+
+        {/* Analytics Button */}
+        <section>
+          <button
+            onClick={() => navigate("/business/analytics")}
+            className="bg-purple-600 text-white px-6 py-4 rounded-xl hover:bg-purple-700 focus:outline-none focus:ring-4 focus:ring-purple-300 transition w-full max-w-md"
+          >
+            View Analytics Dashboard
+          </button>
+        </section>
+      </main>
     </div>
   );
 };

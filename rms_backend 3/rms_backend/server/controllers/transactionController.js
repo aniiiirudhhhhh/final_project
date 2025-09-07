@@ -18,50 +18,52 @@ exports.addTransaction = async (req, res) => {
     const customer = await User.findById(customerId);
     if (!customer) return res.status(404).json({ message: "Customer not found" });
 
-    // ---------- Points Calculation ----------
-    let earnedPoints = 0;
-
-    // 1) Tier multiplier
+    // Points calculation parts
     let tierMultiplier = 1;
     if (customer.tier) {
       const tierRule = policy.tierRules.find(t => t.tierName === customer.tier);
       if (tierRule) tierMultiplier = tierRule.multiplier;
     }
 
-    // 2) Category-specific points
+    // Calculate base points (fallback)
+    const basePoints = Math.floor((amount / 100) * policy.basePointsPer100);
+
+    // Calculate category points if applicable
+    let categoryPoints = 0;
     const categoryRule = policy.categoryRules.find(c => c.category === category);
     if (categoryRule) {
-      earnedPoints = amount >= categoryRule.minAmount
+      categoryPoints = amount >= categoryRule.minAmount
         ? Math.floor((amount / 100) * categoryRule.pointsPer100) + (categoryRule.bonusPoints || 0)
-        : Math.floor((amount / 100) * policy.basePointsPer100);
+        : basePoints;
     } else {
-      earnedPoints = Math.floor((amount / 100) * policy.basePointsPer100);
+      categoryPoints = basePoints;
     }
 
     // Apply tier multiplier
-    earnedPoints = Math.floor(earnedPoints * tierMultiplier);
+    let earnedPoints = Math.floor(categoryPoints * tierMultiplier);
 
-    // 3) Threshold bonuses
+    // Calculate spend threshold bonus points
+    let thresholdBonus = 0;
     if (policy.spendThresholds?.length) {
       policy.spendThresholds.forEach(threshold => {
-        if (amount >= threshold.minAmount) earnedPoints += threshold.bonusPoints;
+        if (amount >= threshold.minAmount) thresholdBonus += threshold.bonusPoints;
       });
     }
+    earnedPoints += thresholdBonus;
 
-    // ---------- Add points with expiry ----------
+    // Add points with expiry
     if (earnedPoints > 0) {
       const expiryDays = policy.pointsExpiryDays || 365;
       if (typeof customer.addPoints === 'function') {
-        customer.addPoints(earnedPoints, expiryDays); // Make sure User model has addPoints()
+        customer.addPoints(earnedPoints, expiryDays);
       } else {
-        // fallback if addPoints not defined
         const now = new Date();
         const expiresAt = new Date(now.getTime() + expiryDays * 24 * 60 * 60 * 1000);
         customer.pointsHistory.push({ points: earnedPoints, redeemed: false, expiresAt });
       }
     }
 
-    // ---------- Redeem points ----------
+    // Redeem points logic (unchanged)
     const now = new Date();
     let availablePoints = customer.pointsHistory
       .filter(p => !p.redeemed && p.expiresAt > now)
@@ -85,17 +87,17 @@ exports.addTransaction = async (req, res) => {
       }
     }
 
-    // ---------- Recalculate balance ----------
+    // Recalculate balance
     customer.pointsBalance = customer.pointsHistory
       .filter(p => !p.redeemed && p.expiresAt > now)
       .reduce((sum, p) => sum + p.points, 0);
 
-    // ---------- Auto-assign tier ----------
+    // Auto-assign tier
     if (policy.tierRules?.length) {
       const sortedTiers = [...policy.tierRules].sort((a, b) => b.minPoints - a.minPoints);
       for (const tierRule of sortedTiers) {
         if (customer.pointsBalance >= tierRule.minPoints) {
-          customer.tier = tierRule.tierName; // Correct field
+          customer.tier = tierRule.tierName;
           break;
         }
       }
@@ -103,7 +105,7 @@ exports.addTransaction = async (req, res) => {
 
     await customer.save();
 
-    // ---------- Save transaction ----------
+    // Save transaction
     const transaction = await Transaction.create({
       adminId,
       customerId,
@@ -114,10 +116,18 @@ exports.addTransaction = async (req, res) => {
       finalPoints: customer.pointsBalance,
     });
 
+    // Respond with detailed points breakdown
     res.status(201).json({
       transaction,
       currentTier: customer.tier,
       currentBalance: customer.pointsBalance,
+      pointsBreakdown: {
+        basePoints,
+        categoryPoints,
+        tierMultiplier,
+        thresholdBonus,
+        totalEarnedPoints: earnedPoints,
+      }
     });
 
   } catch (err) {
@@ -125,8 +135,6 @@ exports.addTransaction = async (req, res) => {
     res.status(500).json({ message: err.message });
   }
 };
-
-
 // Fetch transaction history for a specific customer (admin)
 exports.getCustomerHistory = async (req, res) => {
   try {
