@@ -52,7 +52,7 @@ exports.loginCustomer = async (req, res) => {
     const { email, password, adminId } = req.body;
 
     // Find customer under given admin
-    const customer = await User.findOne({ email, role: "customer", adminId });
+    const customer = await User.findOne({ email, role: "customer"});
     if (!customer) {
       return res.status(400).json({ message: "Invalid credentials" });
     }

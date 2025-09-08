@@ -3,11 +3,11 @@ import { useNavigate } from "react-router-dom";
 import API from "../api";
 
 const CustomerLogin = () => {
-  const [isLogin, setIsLogin] = useState(true); // toggle login/register
-  const [name, setName] = useState("");         // only for register
+  const [isLogin, setIsLogin] = useState(true);      // toggle login/register
+  const [name, setName] = useState("");              // only for register
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [adminId, setAdminId] = useState("");
+  const [adminId, setAdminId] = useState("");        // only for register
   const [error, setError] = useState("");
   const navigate = useNavigate();
 
@@ -17,14 +17,10 @@ const CustomerLogin = () => {
     try {
       let res;
       if (isLogin) {
-        // Customer login - adminId optional
-        const payload = { email, password };
-        if (adminId.trim() !== "") {
-          payload.adminId = adminId;
-        }
-        res = await API.post("/auth/customer/login", payload);
+        // Customer login (no adminId needed!)
+        res = await API.post("/auth/customer/login", { email, password });
       } else {
-        // Customer register - adminId required
+        // Customer register (adminId required)
         res = await API.post("/auth/customer/register", { name, email, password, adminId });
       }
       localStorage.setItem("token", res.data.token);
@@ -41,7 +37,6 @@ const CustomerLogin = () => {
         <h2 className="text-2xl font-bold mb-6 text-center">
           {isLogin ? "Customer Login" : "Customer Registration"}
         </h2>
-
         {error && <p className="text-red-600 mb-4">{error}</p>}
 
         {!isLogin && (
@@ -52,7 +47,7 @@ const CustomerLogin = () => {
               className="border p-2 mb-4 w-full rounded"
               value={name}
               onChange={(e) => setName(e.target.value)}
-              required={!isLogin}
+              required
             />
           </>
         )}
@@ -75,15 +70,20 @@ const CustomerLogin = () => {
           required
         />
 
-        <label className="block mb-2 font-semibold">Admin ID</label>
-        <input
-          type="text"
-          className="border p-2 mb-6 w-full rounded"
-          value={adminId}
-          onChange={(e) => setAdminId(e.target.value)}
-          required={!isLogin} // required only on registration
-          placeholder="Enter your Admin's ID"
-        />
+        {/* Only show Admin ID input for registration */}
+        {!isLogin && (
+          <>
+            <label className="block mb-2 font-semibold">Admin ID</label>
+            <input
+              type="text"
+              className="border p-2 mb-6 w-full rounded"
+              value={adminId}
+              onChange={(e) => setAdminId(e.target.value)}
+              required
+              placeholder="Enter your Admin's ID"
+            />
+          </>
+        )}
 
         <button
           type="submit"

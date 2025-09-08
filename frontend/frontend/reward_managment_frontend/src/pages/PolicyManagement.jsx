@@ -205,12 +205,6 @@ const PolicyManagement = () => {
         <h1 className="text-2xl font-bold">Reward Management System</h1>
         <div className="space-x-3">
           <button
-            onClick={() => navigate("/login/admin")}
-            className="bg-green-500 hover:bg-green-600 px-4 py-2 rounded-lg transition"
-          >
-            Admin
-          </button>
-          <button
             onClick={() => navigate("/business")}
             className="bg-gray-500 hover:bg-gray-600 px-4 py-2 rounded-lg transition"
           >

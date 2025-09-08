@@ -25,7 +25,7 @@ function App() {
 
         {/* ✅ Login Routes */}
         <Route path="/login/admin" element={<AdminLogin />} />
-        <Route path="/customer/login" element={<CustomerLogin />} />
+        <Route path="/login/customer" element={<CustomerLogin />} />
 
         {/* ✅ Business/Admin Routes */}
         <Route path="/business" element={<Business />} />
