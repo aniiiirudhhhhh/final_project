@@ -1,7 +1,16 @@
 import React, { useEffect, useState, useRef } from "react";
 import { useNavigate, NavLink } from "react-router-dom";
 import API from "../api";
-import { UserCircle, ChevronDown, Menu, X } from "lucide-react";
+import {
+  UserCircle,
+  ChevronDown,
+  Menu,
+  X,
+  Users,
+  BarChart3,
+  Layers,
+  ShieldCheck,
+} from "lucide-react";
 
 const Business = () => {
   const [policy, setPolicy] = useState(null);
@@ -14,7 +23,6 @@ const Business = () => {
   const user = JSON.parse(localStorage.getItem("user"));
   const token = localStorage.getItem("token");
 
-  // Ref for profile dropdown click outside detection
   const profileRef = useRef(null);
 
   useEffect(() => {
@@ -22,7 +30,6 @@ const Business = () => {
   }, []);
 
   useEffect(() => {
-    // Close profile menu if clicked outside
     const handleClickOutside = (event) => {
       if (profileRef.current && !profileRef.current.contains(event.target)) {
         setProfileMenuOpen(false);
@@ -71,15 +78,15 @@ const Business = () => {
   ];
 
   return (
-    <div className="min-h-screen bg-gray-50 flex flex-col">
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 flex flex-col">
       {/* Header */}
       <header className="sticky top-0 bg-white shadow-md z-50">
         <div className="max-w-7xl mx-auto px-6 py-4 flex justify-between items-center">
           <h1
-            className="text-2xl font-extrabold text-indigo-700 cursor-pointer"
+            className="text-2xl font-extrabold text-indigo-700 cursor-pointer tracking-wide"
             onClick={() => navigate("/business")}
           >
-            Loyalty Program
+            Reward Management System
           </h1>
 
           {/* Desktop nav */}
@@ -90,8 +97,8 @@ const Business = () => {
                 to={path}
                 className={({ isActive }) =>
                   isActive
-                    ? "text-indigo-700 font-semibold border-b-2 border-indigo-700 pb-1"
-                    : "text-gray-600 hover:text-indigo-700 transition"
+                    ? "relative text-indigo-700 font-semibold pb-1 after:content-[''] after:absolute after:w-full after:h-[2px] after:bg-indigo-700 after:left-0 after:bottom-0"
+                    : "text-gray-600 hover:text-indigo-700 transition font-medium"
                 }
               >
                 {name}
@@ -109,21 +116,21 @@ const Business = () => {
               >
                 <UserCircle className="w-8 h-8 text-indigo-600" />
                 <span className="font-semibold text-gray-700">
-                  {user?.user?.name || "Admin"}
+                  {user?.name || "Admin"}
                 </span>
                 <ChevronDown className="w-4 h-4 text-gray-500" />
               </button>
 
               {profileMenuOpen && (
                 <div
-                  className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none z-50"
+                  className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none z-50"
                   role="menu"
                   aria-orientation="vertical"
                   aria-labelledby="user-menu"
                 >
                   <button
                     onClick={logout}
-                    className="block w-full text-left px-4 py-2 text-gray-700 hover:bg-indigo-100 hover:text-indigo-900"
+                    className="block w-full text-left px-4 py-2 text-gray-700 hover:bg-indigo-100 hover:text-indigo-900 rounded-lg"
                     role="menuitem"
                   >
                     Logout
@@ -163,7 +170,6 @@ const Business = () => {
                 </li>
               ))}
 
-              {/* Mobile profile menu */}
               <li className="pt-4 border-t border-gray-200">
                 <button
                   onClick={() => {
@@ -202,23 +208,25 @@ const Business = () => {
         </section>
 
         {/* Policy Section */}
-        <section className="bg-white p-6 rounded-xl shadow-md">
+        <section className="bg-white p-6 rounded-2xl shadow-lg border border-gray-100">
           {loading ? (
             <p className="text-gray-500">Loading policy...</p>
           ) : error ? (
-            <div className="text-yellow-900 bg-yellow-100 border border-yellow-300 p-4 rounded flex flex-col max-w-md">
+            <div className="text-yellow-900 bg-yellow-100 border border-yellow-300 p-4 rounded-xl flex flex-col max-w-md">
               <p>{error}</p>
               <button
                 onClick={() => navigate("/business/policy")}
-                className="mt-4 self-start bg-indigo-600 text-white px-4 py-2 rounded hover:bg-indigo-700 transition"
+                className="mt-4 self-start bg-gradient-to-r from-indigo-600 to-purple-600 text-white px-5 py-2 rounded-lg hover:opacity-90 transition shadow-md"
               >
                 Create New Policy
               </button>
             </div>
           ) : policy ? (
             <>
-              <h3 className="text-2xl font-semibold mb-4">Current Reward Policy</h3>
-              <dl className="grid grid-cols-2 gap-y-2 gap-x-10 max-w-xl">
+              <h3 className="text-2xl font-semibold mb-4 flex items-center gap-2">
+                <ShieldCheck className="w-6 h-6 text-indigo-600" /> Current Reward Policy
+              </h3>
+              <dl className="grid grid-cols-2 gap-y-3 gap-x-10 max-w-xl">
                 <dt className="font-medium text-gray-700">Name:</dt>
                 <dd className="text-gray-900">{policy.policyName}</dd>
 
@@ -236,7 +244,7 @@ const Business = () => {
               </dl>
               <button
                 onClick={() => navigate("/business/policy")}
-                className="mt-6 bg-indigo-600 text-white px-5 py-3 rounded-lg hover:bg-indigo-700 focus:outline-none focus:ring-4 focus:ring-indigo-300 transition"
+                className="mt-6 bg-gradient-to-r from-indigo-600 to-purple-600 text-white px-6 py-3 rounded-xl hover:opacity-90 focus:outline-none focus:ring-4 focus:ring-indigo-300 transition shadow-md"
               >
                 Edit Policy
               </button>
@@ -245,42 +253,54 @@ const Business = () => {
         </section>
 
         {/* Sections Grid */}
-        <section className="grid grid-cols-1 md:grid-cols-2 gap-8">
+        <section className="grid grid-cols-1 md:grid-cols-3 gap-8">
           {/* Customers Card */}
-          <div className="bg-white p-6 rounded-xl shadow-md flex flex-col">
-            <h3 className="text-2xl font-semibold mb-3">Registered Customers</h3>
-            <p className="flex-grow text-gray-700 mb-6">View and manage your registered customers.</p>
+          <div className="bg-white p-6 rounded-2xl shadow-lg border border-gray-100 flex flex-col hover:shadow-xl transition">
+            <h3 className="text-2xl font-semibold mb-3 flex items-center gap-2">
+              <Users className="w-6 h-6 text-green-600" /> Registered Customers
+            </h3>
+            <p className="flex-grow text-gray-700 mb-6">
+              View and manage your registered customers.
+            </p>
             <button
               onClick={() => navigate("/business/users")}
-              className="self-start bg-green-600 text-white px-5 py-3 rounded-lg hover:bg-green-700 focus:outline-none focus:ring-4 focus:ring-green-300 transition"
+              className="self-start bg-green-600 text-white px-5 py-3 rounded-lg hover:bg-green-700 focus:outline-none focus:ring-4 focus:ring-green-300 transition shadow-md"
             >
               View Customers
             </button>
           </div>
 
           {/* Tier Management Card */}
-          <div className="bg-white p-6 rounded-xl shadow-md flex flex-col">
-            <h3 className="text-2xl font-semibold mb-3">Tier Management</h3>
+          <div className="bg-white p-6 rounded-2xl shadow-lg border border-gray-100 flex flex-col hover:shadow-xl transition">
+            <h3 className="text-2xl font-semibold mb-3 flex items-center gap-2">
+              <Layers className="w-6 h-6 text-indigo-600" /> Tier Management
+            </h3>
             <p className="flex-grow text-gray-700 mb-6">
               Manage tier rules like Silver, Gold, Platinum with multipliers and benefits.
             </p>
             <button
               onClick={() => navigate("/business/tiers")}
-              className="self-start bg-indigo-600 text-white px-5 py-3 rounded-lg hover:bg-indigo-700 focus:outline-none focus:ring-4 focus:ring-indigo-300 transition"
+              className="self-start bg-indigo-600 text-white px-5 py-3 rounded-lg hover:bg-indigo-700 focus:outline-none focus:ring-4 focus:ring-indigo-300 transition shadow-md"
             >
               Edit Tier Rules
             </button>
           </div>
-        </section>
 
-        {/* Analytics Button */}
-        <section>
-          <button
-            onClick={() => navigate("/business/analytics")}
-            className="bg-purple-600 text-white px-6 py-4 rounded-xl hover:bg-purple-700 focus:outline-none focus:ring-4 focus:ring-purple-300 transition w-full max-w-md"
-          >
-            View Analytics Dashboard
-          </button>
+          {/* Analytics Card */}
+          <div className="bg-white p-6 rounded-2xl shadow-lg border border-gray-100 flex flex-col hover:shadow-xl transition">
+            <h3 className="text-2xl font-semibold mb-3 flex items-center gap-2">
+              <BarChart3 className="w-6 h-6 text-purple-600" /> Analytics Dashboard
+            </h3>
+            <p className="flex-grow text-gray-700 mb-6">
+              Track insights and performance of your loyalty program.
+            </p>
+            <button
+              onClick={() => navigate("/business/analytics")}
+              className="self-start bg-purple-600 text-white px-5 py-3 rounded-lg hover:bg-purple-700 focus:outline-none focus:ring-4 focus:ring-purple-300 transition shadow-md"
+            >
+              View Analytics
+            </button>
+          </div>
         </section>
       </main>
     </div>

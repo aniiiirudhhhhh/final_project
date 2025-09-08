@@ -14,24 +14,33 @@ import CustomerLogin from "./pages/CustomerLogin";
 import CustomerTransactions from "./pages/CustomerTransactions";
 import CustomerPoints from "./pages/CustomerPoints";
 import CustomerProfile from "./pages/CustomerProfile";
+
 function App() {
   return (
     <BrowserRouter>
       <Routes>
+        {/* ✅ Dashboard accessible from both "/" and "/dashboard" */}
         <Route path="/" element={<Dashboard />} />
+        <Route path="/dashboard" element={<Dashboard />} />
+
+        {/* ✅ Login Routes */}
         <Route path="/login/admin" element={<AdminLogin />} />
-        <Route path="/login/customer" element={<CustomerLogin/>} />
+        <Route path="/customer/login" element={<CustomerLogin />} />
+
+        {/* ✅ Business/Admin Routes */}
         <Route path="/business" element={<Business />} />
         <Route path="/business/policy" element={<PolicyManagement />} />
-        <Route path="/business/users" element={<ShowUsers></ShowUsers>}/>
-        <Route path="/business/users/:customerId" element={<TransHistory></TransHistory>}/>
-        <Route path="/business/tiers" element={<TierManagement></TierManagement>}/>
-        <Route path="/business/analytics" element={<Analytics></Analytics>}/>
-        <Route path="/business/points-expiry" element={<PointsExpiry></PointsExpiry>}/>
+        <Route path="/business/users" element={<ShowUsers />} />
+        <Route path="/business/users/:customerId" element={<TransHistory />} />
+        <Route path="/business/tiers" element={<TierManagement />} />
+        <Route path="/business/analytics" element={<Analytics />} />
+        <Route path="/business/points-expiry" element={<PointsExpiry />} />
+
+        {/* ✅ Customer Routes */}
         <Route path="/customer" element={<Customer />} />
-        <Route path="/customer/transactions" element={<CustomerTransactions></CustomerTransactions>} />
-        <Route path="/customer/points" element={<CustomerPoints></CustomerPoints>} />
-        <Route path="/customer/profile" element={<CustomerProfile></CustomerProfile>} />
+        <Route path="/customer/transactions" element={<CustomerTransactions />} />
+        <Route path="/customer/points" element={<CustomerPoints />} />
+        <Route path="/customer/profile" element={<CustomerProfile />} />
       </Routes>
     </BrowserRouter>
   );

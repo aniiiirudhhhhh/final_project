@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import API from "../api";
+import { ArrowLeft, DollarSign, Gift, RefreshCcw, TrendingUp } from "lucide-react";
 
 const TransHistory = () => {
   const { customerId } = useParams();
@@ -31,34 +32,71 @@ const TransHistory = () => {
   }, [customerId, token]);
 
   return (
-    <div className="max-w-4xl mx-auto p-6">
+    <div className="min-h-screen bg-gradient-to-br from-indigo-500 via-purple-500 to-pink-500 p-8">
+      {/* Back Button */}
       <button
-        className="mb-4 text-blue-600 underline"
         onClick={() => navigate(-1)}
+        className="flex items-center gap-2 text-black font-semibold  transition mb-6"
       >
-        &larr; Back to Customers
+        <ArrowLeft className="w-5 h-5" /> Back to Customers
       </button>
-      <h1 className="text-2xl font-bold mb-4">
-        Transactions for {customer?.name || "Customer"}
-      </h1>
 
-      {loading && <p>Loading...</p>}
-      {error && <p className="text-red-600">{error}</p>}
+      {/* Header */}
+      <div className="bg-white/20 backdrop-blur-lg rounded-2xl shadow-xl p-6 mb-8 text-center text-white">
+        <h1 className="text-3xl font-bold tracking-wide">
+          {customer?.name || "Customer"}'s Transactions
+        </h1>
+        <p className="text-sm opacity-80 mt-2">
+          A detailed history of purchases, earned & redeemed points.
+        </p>
+      </div>
 
-      {transactions.length === 0 && !loading && <p>No transactions found.</p>}
+      {/* Loader & Errors */}
+      {loading && <p className="text-center text-white">Loading...</p>}
+      {error && <p className="text-center text-red-200 font-semibold">{error}</p>}
+      {transactions.length === 0 && !loading && (
+        <p className="text-center text-white opacity-80">No transactions found.</p>
+      )}
 
-      <ul className="space-y-4">
+      {/* Transactions */}
+      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
         {transactions.map((t) => (
-          <li key={t._id} className="border p-4 rounded shadow bg-white">
-            <p><strong>Amount:</strong> ${t.amount}</p>
-            <p><strong>Category:</strong> {t.category}</p>
-            <p><strong>Earned Points:</strong> {t.earnedPoints}</p>
-            <p><strong>Redeemed Points:</strong> {t.redeemedPoints}</p>
-            <p><strong>Final Balance:</strong> {t.finalPoints}</p>
-            <p className="text-xs text-gray-500 mt-2">{new Date(t.createdAt).toLocaleString()}</p>
-          </li>
+          <div
+            key={t._id}
+            className="bg-white/20 backdrop-blur-md rounded-2xl shadow-lg p-6 text-white hover:scale-105 transition-transform duration-300"
+          >
+            <div className="flex items-center justify-between mb-4">
+              <span className="flex items-center gap-2 font-semibold text-lg">
+                <DollarSign className="w-5 h-5 text-green-300" />
+                ${t.amount}
+              </span>
+              <span className="text-xs opacity-80">
+                {new Date(t.createdAt).toLocaleDateString()}
+              </span>
+            </div>
+
+            <p className="mb-2">
+              <strong className="text-yellow-300">Category:</strong> {t.category}
+            </p>
+            <p className="mb-2 flex items-center gap-2">
+              <TrendingUp className="w-4 h-4 text-green-300" />
+              <strong>Earned:</strong> {t.earnedPoints}
+            </p>
+            <p className="mb-2 flex items-center gap-2">
+              <RefreshCcw className="w-4 h-4 text-red-300" />
+              <strong>Redeemed:</strong> {t.redeemedPoints}
+            </p>
+            <p className="mb-2 flex items-center gap-2">
+              <Gift className="w-4 h-4 text-purple-300" />
+              <strong>Final Balance:</strong> {t.finalPoints}
+            </p>
+
+            <p className="text-xs opacity-60 mt-3 text-right">
+              {new Date(t.createdAt).toLocaleTimeString()}
+            </p>
+          </div>
         ))}
-      </ul>
+      </div>
     </div>
   );
 };
