@@ -32,7 +32,7 @@ const CustomerLogin = () => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50 p-6">
+    <div className="w-screen h-screen flex items-center justify-center bg-gray-50 p-6">
       <form onSubmit={handleSubmit} className="bg-white p-8 rounded shadow-md max-w-md w-full">
         <h2 className="text-2xl font-bold mb-6 text-center">
           {isLogin ? "Customer Login" : "Customer Registration"}

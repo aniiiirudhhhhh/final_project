@@ -159,7 +159,7 @@ const Analytics = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-100 via-white to-blue-50 animate-gradient-x">
+    <div className="w-screen h-screen bg-gradient-to-br from-slate-100 via-white to-blue-50 animate-gradient-x">
       <div className="max-w-7xl mx-auto p-6">
         {/* Header */}
         <div className="mb-12">

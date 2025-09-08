@@ -43,7 +43,7 @@ const Customers = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-purple-50 to-blue-50">
+    <div className="w-screen min-h-screen bg-gradient-to-br from-purple-50 to-blue-50">
       {/* ✅ Navbar */}
       <header className="bg-purple-600 text-white px-6 py-4 flex justify-between items-center shadow-md">
         <h1 className="text-xl font-bold">Reward Management System</h1>

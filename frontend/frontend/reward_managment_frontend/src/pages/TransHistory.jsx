@@ -32,70 +32,73 @@ const TransHistory = () => {
   }, [customerId, token]);
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-indigo-500 via-purple-500 to-pink-500 p-8">
+    <div className="w-screen min-h-screen bg-gradient-to-br from-purple-50 to-blue-50 p-6">
       {/* Back Button */}
       <button
         onClick={() => navigate(-1)}
-        className="flex items-center gap-2 text-black font-semibold  transition mb-6"
+        className="flex items-center gap-2 text-purple-700 font-semibold transition mb-6 hover:underline"
       >
         <ArrowLeft className="w-5 h-5" /> Back to Customers
       </button>
 
       {/* Header */}
-      <div className="bg-white/20 backdrop-blur-lg rounded-2xl shadow-xl p-6 mb-8 text-center text-white">
-        <h1 className="text-3xl font-bold tracking-wide">
+      <div className="bg-white/80 backdrop-blur-md rounded-3xl shadow-lg p-6 mb-6 text-center">
+        <h1 className="text-2xl md:text-3xl font-bold tracking-wide text-purple-700">
           {customer?.name || "Customer"}'s Transactions
         </h1>
-        <p className="text-sm opacity-80 mt-2">
+        <p className="text-gray-600 mt-2">
           A detailed history of purchases, earned & redeemed points.
         </p>
       </div>
 
-      {/* Loader & Errors */}
-      {loading && <p className="text-center text-white">Loading...</p>}
-      {error && <p className="text-center text-red-200 font-semibold">{error}</p>}
-      {transactions.length === 0 && !loading && (
-        <p className="text-center text-white opacity-80">No transactions found.</p>
-      )}
+      {/* Content Area */}
+      <div className="flex-1 overflow-y-auto space-y-6">
+        {/* Loader & Errors */}
+        {loading && <p className="text-center text-gray-600">Loading...</p>}
+        {error && <p className="text-center text-red-600 font-semibold">{error}</p>}
+        {transactions.length === 0 && !loading && (
+          <p className="text-center text-gray-500">No transactions found.</p>
+        )}
 
-      {/* Transactions */}
-      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-        {transactions.map((t) => (
-          <div
-            key={t._id}
-            className="bg-white/20 backdrop-blur-md rounded-2xl shadow-lg p-6 text-white hover:scale-105 transition-transform duration-300"
-          >
-            <div className="flex items-center justify-between mb-4">
-              <span className="flex items-center gap-2 font-semibold text-lg">
-                <DollarSign className="w-5 h-5 text-green-300" />
-                ${t.amount}
-              </span>
-              <span className="text-xs opacity-80">
-                {new Date(t.createdAt).toLocaleDateString()}
-              </span>
+        {/* Transactions Grid */}
+        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+          {transactions.map((t) => (
+            <div
+              key={t._id}
+              className="relative bg-white/80 backdrop-blur-md rounded-3xl shadow-lg p-6 hover:shadow-2xl hover:-translate-y-1 transition-all duration-300 cursor-pointer"
+            >
+              <div className="flex items-center justify-between mb-4">
+                <span className="flex items-center gap-2 font-semibold text-lg text-purple-700">
+                  <DollarSign className="w-5 h-5 text-green-500" />
+                  ${t.amount}
+                </span>
+                <span className="text-xs text-gray-500">
+                  {new Date(t.createdAt).toLocaleDateString()}
+                </span>
+              </div>
+
+              <p className="mb-2 text-gray-700">
+                <strong className="text-yellow-500">Category:</strong> {t.category}
+              </p>
+              <p className="mb-2 flex items-center gap-2 text-gray-700">
+                <TrendingUp className="w-4 h-4 text-green-500" />
+                <strong>Earned:</strong> {t.earnedPoints}
+              </p>
+              <p className="mb-2 flex items-center gap-2 text-gray-700">
+                <RefreshCcw className="w-4 h-4 text-red-500" />
+                <strong>Redeemed:</strong> {t.redeemedPoints}
+              </p>
+              <p className="mb-2 flex items-center gap-2 text-gray-700">
+                <Gift className="w-4 h-4 text-purple-500" />
+                <strong>Final Balance:</strong> {t.finalPoints}
+              </p>
+
+              <p className="text-xs opacity-60 mt-3 text-right text-gray-500">
+                {new Date(t.createdAt).toLocaleTimeString()}
+              </p>
             </div>
-
-            <p className="mb-2">
-              <strong className="text-yellow-300">Category:</strong> {t.category}
-            </p>
-            <p className="mb-2 flex items-center gap-2">
-              <TrendingUp className="w-4 h-4 text-green-300" />
-              <strong>Earned:</strong> {t.earnedPoints}
-            </p>
-            <p className="mb-2 flex items-center gap-2">
-              <RefreshCcw className="w-4 h-4 text-red-300" />
-              <strong>Redeemed:</strong> {t.redeemedPoints}
-            </p>
-            <p className="mb-2 flex items-center gap-2">
-              <Gift className="w-4 h-4 text-purple-300" />
-              <strong>Final Balance:</strong> {t.finalPoints}
-            </p>
-
-            <p className="text-xs opacity-60 mt-3 text-right">
-              {new Date(t.createdAt).toLocaleTimeString()}
-            </p>
-          </div>
-        ))}
+          ))}
+        </div>
       </div>
     </div>
   );

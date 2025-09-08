@@ -55,14 +55,8 @@ const Business = () => {
     }
   };
 
-  const toggleMobileMenu = () => {
-    setMobileMenuOpen((prev) => !prev);
-  };
-
-  const toggleProfileMenu = () => {
-    setProfileMenuOpen((prev) => !prev);
-  };
-
+  const toggleMobileMenu = () => setMobileMenuOpen((prev) => !prev);
+  const toggleProfileMenu = () => setProfileMenuOpen((prev) => !prev);
   const logout = () => {
     localStorage.removeItem("token");
     localStorage.removeItem("user");
@@ -78,7 +72,7 @@ const Business = () => {
   ];
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 flex flex-col">
+    <div className="w-screen min-h-screen bg-gradient-to-br from-blue-50 to-indigo-50 flex flex-col">
       {/* Header */}
       <header className="sticky top-0 bg-white shadow-md z-50">
         <div className="max-w-7xl mx-auto px-6 py-4 flex justify-between items-center">
@@ -112,26 +106,17 @@ const Business = () => {
                 className="flex items-center space-x-2 focus:outline-none focus:ring-2 focus:ring-indigo-500 rounded"
                 aria-haspopup="true"
                 aria-expanded={profileMenuOpen}
-                aria-label="User menu"
               >
                 <UserCircle className="w-8 h-8 text-indigo-600" />
-                <span className="font-semibold text-gray-700">
-                  {user?.name || "Admin"}
-                </span>
+                <span className="font-semibold text-gray-700">{user?.name || "Admin"}</span>
                 <ChevronDown className="w-4 h-4 text-gray-500" />
               </button>
 
               {profileMenuOpen && (
-                <div
-                  className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none z-50"
-                  role="menu"
-                  aria-orientation="vertical"
-                  aria-labelledby="user-menu"
-                >
+                <div className="absolute right-0 mt-2 w-48 bg-white rounded-2xl shadow-lg ring-1 ring-black ring-opacity-5 z-50">
                   <button
                     onClick={logout}
                     className="block w-full text-left px-4 py-2 text-gray-700 hover:bg-indigo-100 hover:text-indigo-900 rounded-lg"
-                    role="menuitem"
                   >
                     Logout
                   </button>
@@ -144,7 +129,6 @@ const Business = () => {
           <button
             onClick={toggleMobileMenu}
             className="md:hidden inline-flex items-center justify-center p-2 rounded-md text-gray-600 hover:text-indigo-700 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-indigo-500"
-            aria-label="Toggle menu"
           >
             {mobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
           </button>
@@ -169,7 +153,6 @@ const Business = () => {
                   </NavLink>
                 </li>
               ))}
-
               <li className="pt-4 border-t border-gray-200">
                 <button
                   onClick={() => {
@@ -192,11 +175,8 @@ const Business = () => {
         <section>
           <h2 className="text-4xl font-bold text-gray-900 mb-3">
             Welcome,
-            <span className="text-indigo-600 ml-2">
-              {user?.name || "Business"}
-            </span>
+            <span className="text-indigo-600 ml-2">{user?.name || "Business"}</span>
           </h2>
-
           {user?._id && (
             <p className="text-sm text-gray-500 mb-4">
               <strong>Business ID:</strong> {user._id}
@@ -212,11 +192,11 @@ const Business = () => {
           {loading ? (
             <p className="text-gray-500">Loading policy...</p>
           ) : error ? (
-            <div className="text-yellow-900 bg-yellow-100 border border-yellow-300 p-4 rounded-xl flex flex-col max-w-md">
+            <div className="text-yellow-900 bg-yellow-100 border border-yellow-300 p-4 rounded-2xl flex flex-col max-w-md">
               <p>{error}</p>
               <button
                 onClick={() => navigate("/business/policy")}
-                className="mt-4 self-start bg-gradient-to-r from-indigo-600 to-purple-600 text-white px-5 py-2 rounded-lg hover:opacity-90 transition shadow-md"
+                className="mt-4 self-start bg-gradient-to-r from-indigo-600 to-purple-600 text-white px-5 py-2 rounded-xl hover:opacity-90 transition shadow-md"
               >
                 Create New Policy
               </button>
@@ -229,22 +209,18 @@ const Business = () => {
               <dl className="grid grid-cols-2 gap-y-3 gap-x-10 max-w-xl">
                 <dt className="font-medium text-gray-700">Name:</dt>
                 <dd className="text-gray-900">{policy.policyName}</dd>
-
                 <dt className="font-medium text-gray-700">Description:</dt>
                 <dd className="text-gray-900">{policy.description}</dd>
-
                 <dt className="font-medium text-gray-700">Base Points:</dt>
                 <dd className="text-gray-900">{policy.basePointsPer100} / 100</dd>
-
                 <dt className="font-medium text-gray-700">Redemption Rate:</dt>
                 <dd className="text-gray-900">{policy.redemptionRate}</dd>
-
                 <dt className="font-medium text-gray-700">Minimum Redeem Points:</dt>
                 <dd className="text-gray-900">{policy.minRedeemPoints}</dd>
               </dl>
               <button
                 onClick={() => navigate("/business/policy")}
-                className="mt-6 bg-gradient-to-r from-indigo-600 to-purple-600 text-white px-6 py-3 rounded-xl hover:opacity-90 focus:outline-none focus:ring-4 focus:ring-indigo-300 transition shadow-md"
+                className="mt-6 bg-gradient-to-r from-indigo-600 to-purple-600 text-white px-6 py-3 rounded-2xl hover:opacity-90 focus:outline-none focus:ring-4 focus:ring-indigo-300 transition shadow-md"
               >
                 Edit Policy
               </button>
@@ -264,7 +240,7 @@ const Business = () => {
             </p>
             <button
               onClick={() => navigate("/business/users")}
-              className="self-start bg-green-600 text-white px-5 py-3 rounded-lg hover:bg-green-700 focus:outline-none focus:ring-4 focus:ring-green-300 transition shadow-md"
+              className="self-start bg-green-600 text-white px-5 py-3 rounded-xl hover:bg-green-700 focus:outline-none focus:ring-4 focus:ring-green-300 transition shadow-md"
             >
               View Customers
             </button>
@@ -280,7 +256,7 @@ const Business = () => {
             </p>
             <button
               onClick={() => navigate("/business/tiers")}
-              className="self-start bg-indigo-600 text-white px-5 py-3 rounded-lg hover:bg-indigo-700 focus:outline-none focus:ring-4 focus:ring-indigo-300 transition shadow-md"
+              className="self-start bg-indigo-600 text-white px-5 py-3 rounded-xl hover:bg-indigo-700 focus:outline-none focus:ring-4 focus:ring-indigo-300 transition shadow-md"
             >
               Edit Tier Rules
             </button>
@@ -296,7 +272,7 @@ const Business = () => {
             </p>
             <button
               onClick={() => navigate("/business/analytics")}
-              className="self-start bg-purple-600 text-white px-5 py-3 rounded-lg hover:bg-purple-700 focus:outline-none focus:ring-4 focus:ring-purple-300 transition shadow-md"
+              className="self-start bg-purple-600 text-white px-5 py-3 rounded-xl hover:bg-purple-700 focus:outline-none focus:ring-4 focus:ring-purple-300 transition shadow-md"
             >
               View Analytics
             </button>

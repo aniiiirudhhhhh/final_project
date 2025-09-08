@@ -25,8 +25,6 @@ const CustomerPoints = () => {
         setTier(data.tier || "No tier assigned");
         setPointsExpiryDays(data.pointsExpiryDays || 365);
 
-        // Optional: Fetch tier benefits from backend policy if desired.
-        // For demo, hardcode benefits based on tier:
         const benefitsMap = {
           Silver: "Basic benefits like discounts and exclusive offers.",
           Gold: "All Silver benefits plus priority support and special rewards.",
@@ -51,19 +49,13 @@ const CustomerPoints = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-100 to-indigo-200 flex flex-col">
+    <div className="w-screen h-screen bg-gradient-to-br from-blue-100 to-indigo-200 flex flex-col">
       {/* Header */}
       <header className="bg-indigo-700 text-white px-6 py-4 flex justify-between items-center sticky top-0 z-50 shadow">
         <h1 className="text-xl font-bold cursor-pointer" onClick={() => navigate("/customer")}>
           Loyalty Program
         </h1>
-        <nav className="flex items-center space-x-6">
-          <button
-            onClick={() => navigate("/customer/transactions")}
-            className="bg-indigo-500 hover:bg-indigo-600 px-4 py-2 rounded text-white font-semibold"
-          >
-            Transactions
-          </button>
+        <nav className="flex items-center space-x-4 md:space-x-6">
           <button
             onClick={() => navigate("/customer")}
             className="bg-indigo-500 hover:bg-indigo-600 px-4 py-2 rounded text-white font-semibold"
@@ -80,8 +72,8 @@ const CustomerPoints = () => {
       </header>
 
       {/* Main Content */}
-      <main className="flex-grow p-6 flex justify-center">
-        <div className="w-full max-w-3xl bg-white rounded-2xl p-8 shadow-lg text-center">
+      <main className="flex-1 overflow-y-auto p-4 md:p-6 flex justify-center items-center">
+        <div className="w-full max-w-3xl bg-white rounded-2xl p-6 md:p-8 shadow-lg text-center">
           <h2 className="text-3xl font-bold mb-6 text-indigo-700">Your Points & Tier Information</h2>
 
           {loading ? (

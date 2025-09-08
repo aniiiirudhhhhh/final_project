@@ -101,17 +101,29 @@ const TierManagement = () => {
     }
   };
 
+  // Tier priority map
+  const tierPriority = {
+    Platinum: 3,
+    Gold: 2,
+    Silver: 1,
+    "": 0,
+  };
+
   const filteredCustomers = useMemo(() => {
     let list = customers.filter(
       (c) =>
         c.name.toLowerCase().includes(search.toLowerCase()) ||
         c.email.toLowerCase().includes(search.toLowerCase())
     );
+
     if (sortBy === "name") {
       list = list.sort((a, b) => a.name.localeCompare(b.name));
     } else if (sortBy === "tier") {
-      list = list.sort((a, b) => (a.tier || "").localeCompare(b.tier || ""));
+      list = list.sort(
+        (a, b) => tierPriority[b.tier || ""] - tierPriority[a.tier || ""]
+      );
     }
+
     return list;
   }, [customers, search, sortBy]);
 
@@ -121,7 +133,7 @@ const TierManagement = () => {
   const platinumCount = customers.filter((c) => c.tier === "Platinum").length;
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 p-10 w-full">
+    <div className="w-screen min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 p-10 w-full">
       {/* Header */}
       <header className="mb-10 flex justify-between items-center w-full">
         <h1 className="text-4xl font-extrabold text-indigo-700">Tier Management</h1>
@@ -129,11 +141,11 @@ const TierManagement = () => {
           onClick={() => navigate("/business")}
           className="bg-indigo-600 text-white px-6 py-3 rounded-lg shadow hover:bg-indigo-700"
         >
-           Dashboard
+          Dashboard
         </button>
       </header>
 
-      {/* Summary Cards - Full Width */}
+      {/* Summary Cards */}
       <div className="grid grid-cols-4 gap-8 mb-12 w-full">
         <div className="bg-white p-6 rounded-xl shadow flex items-center space-x-4">
           <Users className="text-indigo-600" size={28} />
@@ -196,7 +208,7 @@ const TierManagement = () => {
         )}
       </section>
 
-      {/* Form Section - Full Width, Two Column */}
+      {/* Form Section */}
       <section className="mb-16 w-full">
         <h2 className="text-3xl font-bold mb-6 text-indigo-700">Add / Edit Tier Rule</h2>
         <div className="bg-white p-8 rounded-xl shadow grid grid-cols-2 gap-8 w-full">

@@ -70,9 +70,7 @@ const PolicyManagement = () => {
     }
   };
 
-  const handleChange = (e) => {
-    setForm({ ...form, [e.target.name]: e.target.value });
-  };
+  const handleChange = (e) => setForm({ ...form, [e.target.name]: e.target.value });
 
   const handleSave = async () => {
     try {
@@ -112,12 +110,9 @@ const PolicyManagement = () => {
     }
   };
 
-  // Category Rules
   const fetchCategoryRules = async () => {
     try {
-      const res = await API.get("/admin/policy", {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      const res = await API.get("/admin/policy", { headers: { Authorization: `Bearer ${token}` } });
       setCategoryRules(res.data.categoryRules || []);
       setCategoryError("");
     } catch (err) {
@@ -125,9 +120,7 @@ const PolicyManagement = () => {
     }
   };
 
-  const handleCategoryChange = (e) => {
-    setCategoryForm({ ...categoryForm, [e.target.name]: e.target.value });
-  };
+  const handleCategoryChange = (e) => setCategoryForm({ ...categoryForm, [e.target.name]: e.target.value });
 
   const handleCategorySave = async () => {
     if (!categoryForm.category) {
@@ -155,12 +148,9 @@ const PolicyManagement = () => {
     }
   };
 
-  // Spend Threshold
   const fetchThresholds = async () => {
     try {
-      const res = await API.get("/admin/policy", {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      const res = await API.get("/admin/policy", { headers: { Authorization: `Bearer ${token}` } });
       setThresholds(res.data.spendThresholds || []);
       setThresholdError("");
     } catch (err) {
@@ -168,9 +158,7 @@ const PolicyManagement = () => {
     }
   };
 
-  const handleThresholdChange = (e) => {
-    setThresholdForm({ ...thresholdForm, [e.target.name]: e.target.value });
-  };
+  const handleThresholdChange = (e) => setThresholdForm({ ...thresholdForm, [e.target.name]: e.target.value });
 
   const handleThresholdSave = async () => {
     if (!thresholdForm.minAmount) {
@@ -196,95 +184,137 @@ const PolicyManagement = () => {
     }
   };
 
-  const COLORS = ["#6366f1", "#22c55e", "#ef4444", "#fbbf24"];
+  const COLORS = ["#6366f1", "#22c55e", "#ef4444", "#fbbf24"]; // TierManagement colors
 
   return (
-    <div className="min-h-screen bg-gray-100 flex flex-col">
-      {/* ✅ Navbar */}
-      <header className="bg-blue-600 text-white px-6 py-4 flex justify-between items-center shadow-md">
+    <div className="w-screen h-screen flex flex-col bg-gradient-to-br from-blue-50 to-indigo-100">
+      {/* Navbar */}
+      <header className="bg-indigo-600 text-white px-6 py-4 flex justify-between items-center shadow-md">
         <h1 className="text-2xl font-bold">Reward Management System</h1>
         <div className="space-x-3">
           <button
             onClick={() => navigate("/business")}
-            className="bg-gray-500 hover:bg-gray-600 px-4 py-2 rounded-lg transition"
+            className="bg-indigo-500 hover:bg-indigo-700 px-4 py-2 rounded-lg transition"
           >
             Dashboard
           </button>
         </div>
       </header>
 
-      {/* ✅ Policy Management Content */}
-      <main className="flex-1 p-6 space-y-8 bg-gradient-to-r from-blue-50 via-white to-purple-50">
+      {/* Main */}
+      <main className="flex-1 p-6 space-y-8">
         <div className="max-w-7xl mx-auto space-y-8">
-          <h1 className="text-4xl font-bold text-gray-900 text-center mb-6">
-            <FileText className="inline w-10 h-10 mr-2 text-blue-600" />
+          <h1 className="text-4xl font-bold text-indigo-700 text-center mb-6">
+            <FileText className="inline w-10 h-10 mr-2 text-indigo-600" />
             Reward Policy Management
           </h1>
 
           {/* Policy Card */}
-          <section className="bg-white shadow-lg rounded-2xl p-6 hover:shadow-2xl transition-shadow duration-300">
+          <section className="bg-white shadow rounded-2xl p-6 hover:shadow-lg transition-shadow duration-300">
             <div className="flex items-center mb-4">
-              <FileText className="w-6 h-6 text-blue-500 mr-2" />
-              <h2 className="text-2xl font-semibold">Policy Details</h2>
+              <FileText className="w-6 h-6 text-indigo-500 mr-2" />
+              <h2 className="text-2xl font-semibold text-indigo-600">Policy Details</h2>
             </div>
             {loading && <p className="text-gray-500">Loading...</p>}
-            {error && <p className="text-yellow-700 mb-3">{error}</p>}
+            {error && <p className="text-red-600 mb-3">{error}</p>}
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <input
-                type="text"
-                name="policyName"
-                placeholder="Policy Name"
-                value={form.policyName}
-                onChange={handleChange}
-                className="border p-2 w-full rounded"
-              />
-              <input
-                type="number"
-                name="basePointsPer100"
-                placeholder="Base Points per 100"
-                value={form.basePointsPer100}
-                onChange={handleChange}
-                className="border p-2 w-full rounded"
-              />
-              <input
-                type="number"
-                name="redemptionRate"
-                placeholder="Redemption Rate"
-                value={form.redemptionRate}
-                onChange={handleChange}
-                className="border p-2 w-full rounded"
-              />
-              <input
-                type="number"
-                name="minRedeemPoints"
-                placeholder="Minimum Redeem Points"
-                value={form.minRedeemPoints}
-                onChange={handleChange}
-                className="border p-2 w-full rounded"
-              />
-              <input
-                type="number"
-                name="pointsExpiryDays"
-                placeholder="Points Expiry Days"
-                value={form.pointsExpiryDays}
-                onChange={handleChange}
-                className="border p-2 w-full rounded md:col-span-2"
-              />
-              <textarea
-                name="description"
-                placeholder="Description"
-                value={form.description}
-                onChange={handleChange}
-                className="border p-2 w-full rounded md:col-span-2"
-              />
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="flex flex-col">
+                <label htmlFor="policyName" className="mb-1 font-semibold text-gray-700">
+                  Policy Name
+                </label>
+                <input
+                  type="text"
+                  id="policyName"
+                  name="policyName"
+                  placeholder="Policy Name"
+                  value={form.policyName}
+                  onChange={handleChange}
+                  className="border p-2 rounded"
+                />
+              </div>
+
+              <div className="flex flex-col">
+                <label htmlFor="basePointsPer100" className="mb-1 font-semibold text-gray-700">
+                  Base Points per 100
+                </label>
+                <input
+                  type="number"
+                  id="basePointsPer100"
+                  name="basePointsPer100"
+                  placeholder="Base Points per 100"
+                  value={form.basePointsPer100}
+                  onChange={handleChange}
+                  className="border p-2 rounded"
+                />
+              </div>
+
+              <div className="flex flex-col">
+                <label htmlFor="redemptionRate" className="mb-1 font-semibold text-gray-700">
+                  Redemption Rate
+                </label>
+                <input
+                  type="number"
+                  id="redemptionRate"
+                  name="redemptionRate"
+                  placeholder="Redemption Rate"
+                  value={form.redemptionRate}
+                  onChange={handleChange}
+                  className="border p-2 rounded"
+                />
+              </div>
+
+              <div className="flex flex-col">
+                <label htmlFor="minRedeemPoints" className="mb-1 font-semibold text-gray-700">
+                  Minimum Redeem Points
+                </label>
+                <input
+                  type="number"
+                  id="minRedeemPoints"
+                  name="minRedeemPoints"
+                  placeholder="Minimum Redeem Points"
+                  value={form.minRedeemPoints}
+                  onChange={handleChange}
+                  className="border p-2 rounded"
+                />
+              </div>
+
+              <div className="flex flex-col md:col-span-2">
+                <label htmlFor="pointsExpiryDays" className="mb-1 font-semibold text-gray-700">
+                  Points Expiry Days
+                </label>
+                <input
+                  type="number"
+                  id="pointsExpiryDays"
+                  name="pointsExpiryDays"
+                  placeholder="Points Expiry Days"
+                  value={form.pointsExpiryDays}
+                  onChange={handleChange}
+                  className="border p-2 rounded"
+                />
+              </div>
+
+              <div className="flex flex-col md:col-span-2">
+                <label htmlFor="description" className="mb-1 font-semibold text-gray-700">
+                  Description
+                </label>
+                <textarea
+                  id="description"
+                  name="description"
+                  placeholder="Description"
+                  value={form.description}
+                  onChange={handleChange}
+                  className="border p-2 rounded resize-y"
+                  rows="4"
+                />
+              </div>
             </div>
 
             <div className="flex gap-4 mt-4">
               <button
                 onClick={handleSave}
                 disabled={loading}
-                className="bg-gradient-to-r from-blue-600 to-blue-500 text-white px-5 py-2 rounded hover:from-blue-700 hover:to-blue-600 transition-colors"
+                className="bg-indigo-600 text-white px-5 py-2 rounded hover:bg-indigo-700 transition-colors"
               >
                 {loading ? "Saving..." : "Save Policy"}
               </button>
@@ -292,7 +322,7 @@ const PolicyManagement = () => {
                 <button
                   onClick={handleDelete}
                   disabled={loading}
-                  className="bg-gradient-to-r from-red-600 to-red-500 text-white px-5 py-2 rounded hover:from-red-700 hover:to-red-600 transition-colors"
+                  className="bg-red-600 text-white px-5 py-2 rounded hover:bg-red-700 transition-colors"
                 >
                   Delete Policy
                 </button>
@@ -301,15 +331,15 @@ const PolicyManagement = () => {
           </section>
 
           {/* Category Rules Card */}
-          <section className="bg-white shadow-lg rounded-2xl p-6 hover:shadow-2xl transition-shadow duration-300">
+          <section className="bg-white shadow rounded-2xl p-6 hover:shadow-lg transition-shadow duration-300">
             <div className="flex items-center justify-between mb-4">
               <div className="flex items-center">
                 <Tag className="w-6 h-6 text-green-500 mr-2" />
-                <h2 className="text-2xl font-semibold">Category Rules</h2>
+                <h2 className="text-2xl font-semibold text-green-600">Category Rules</h2>
               </div>
               <button
                 onClick={() => setCategoryCollapsed(!categoryCollapsed)}
-                className="text-sm text-blue-600 hover:underline flex items-center"
+                className="text-sm text-indigo-600 hover:underline flex items-center"
               >
                 {categoryCollapsed ? "Expand" : "Collapse"}
               </button>
@@ -369,7 +399,7 @@ const PolicyManagement = () => {
                   <button
                     onClick={handleCategorySave}
                     disabled={categoryLoading}
-                    className="bg-gradient-to-r from-green-600 to-green-500 text-white px-4 py-2 rounded hover:from-green-700 hover:to-green-600 transition-colors md:col-span-2"
+                    className="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700 transition-colors md:col-span-2"
                   >
                     {categoryLoading ? "Saving..." : "Save Category Rule"}
                   </button>
@@ -379,15 +409,15 @@ const PolicyManagement = () => {
           </section>
 
           {/* Threshold Bonuses Card */}
-          <section className="bg-white shadow-lg rounded-2xl p-6 hover:shadow-2xl transition-shadow duration-300">
+          <section className="bg-white shadow rounded-2xl p-6 hover:shadow-lg transition-shadow duration-300">
             <div className="flex items-center justify-between mb-4">
               <div className="flex items-center">
                 <Gift className="w-6 h-6 text-purple-500 mr-2" />
-                <h2 className="text-2xl font-semibold">Spend Threshold Bonuses</h2>
+                <h2 className="text-2xl font-semibold text-purple-600">Spend Threshold Bonuses</h2>
               </div>
               <button
                 onClick={() => setThresholdCollapsed(!thresholdCollapsed)}
-                className="text-sm text-blue-600 hover:underline flex items-center"
+                className="text-sm text-indigo-600 hover:underline flex items-center"
               >
                 {thresholdCollapsed ? "Expand" : "Collapse"}
               </button>
@@ -399,7 +429,7 @@ const PolicyManagement = () => {
                 <ul className="mb-4 space-y-2 max-h-48 overflow-auto border p-3 rounded">
                   {thresholds.map((rule, idx) => (
                     <li key={idx} className="border rounded p-2 bg-purple-50 flex justify-between items-center">
-                      Minimum Spend: ${rule.minAmount} 
+                      Minimum Spend: ${rule.minAmount}
                       <span className="bg-purple-200 text-purple-800 px-2 py-1 rounded-full text-sm font-medium">
                         +{rule.bonusPoints} ⭐
                       </span>
@@ -427,7 +457,7 @@ const PolicyManagement = () => {
                   <button
                     onClick={handleThresholdSave}
                     disabled={thresholdLoading}
-                    className="bg-gradient-to-r from-purple-600 to-purple-500 text-white px-4 py-2 rounded hover:from-purple-700 hover:to-purple-600 transition-colors md:col-span-2"
+                    className="bg-purple-600 text-white px-4 py-2 rounded hover:bg-purple-700 transition-colors md:col-span-2"
                   >
                     {thresholdLoading ? "Saving..." : "Save Threshold Bonus"}
                   </button>
@@ -441,13 +471,12 @@ const PolicyManagement = () => {
               </>
             )}
 
-            {/* Optional Mini Pie Chart */}
             {thresholds.length > 0 && (
               <div className="mt-6 h-40 w-40 mx-auto">
                 <ResponsiveContainer width="100%" height="100%">
                   <PieChart>
                     <Pie
-                      data={thresholds.map((t, i) => ({ name: `Tier ${i+1}`, value: t.bonusPoints }))}
+                      data={thresholds.map((t, i) => ({ name: `Tier ${i + 1}`, value: t.bonusPoints }))}
                       dataKey="value"
                       nameKey="name"
                       outerRadius={60}
@@ -464,8 +493,8 @@ const PolicyManagement = () => {
         </div>
       </main>
 
-      {/* ✅ Footer */}
-      <footer className="bg-blue-600 text-white text-center py-4 mt-auto">
+      {/* Footer */}
+      <footer className="bg-indigo-600 text-white text-center py-4 mt-auto">
         <p>© {new Date().getFullYear()} Reward Management System. All rights reserved.</p>
       </footer>
     </div>
