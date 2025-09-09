@@ -15,21 +15,28 @@ const AdminLogin = () => {
     setError("");
     try {
       let res;
+
       if (isLogin) {
-        // Login API
+        // 🔹 Login API
         res = await API.post("/auth/admin/login", { email, password });
+
+        // Save token & user
+        localStorage.setItem("token", res.data.token);
+        localStorage.setItem("user", JSON.stringify(res.data));
+
+        // 👉 Directly navigate after login (no payment)
+        navigate("/business");
       } else {
-        // Register API
+        // 🔹 Register API
         res = await API.post("/auth/admin/register", { name, email, password });
+
+        // Save token & user
+        localStorage.setItem("token", res.data.token);
+        localStorage.setItem("user", JSON.stringify(res.data));
+
+        // 👉 Start payment only for new registration
+        await startPayment();
       }
-
-      // Save token & user
-      localStorage.setItem("token", res.data.token);
-      localStorage.setItem("user", JSON.stringify(res.data));
-
-      // ✅ Start Payment after successful login/register
-      await startPayment();
-
     } catch (err) {
       setError(
         err.response?.data?.message ||
@@ -43,7 +50,7 @@ const AdminLogin = () => {
     try {
       // 1) Create order from backend
       const { data } = await API.post("/api/create-order", {
-        amountInRupees: 2, // Example: Rs. 500 subscription
+        amountInRupees: 2, // Example subscription amount
       });
 
       // 2) Load Razorpay checkout
