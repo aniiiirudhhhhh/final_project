@@ -30,61 +30,80 @@ const PointsExpiry = () => {
     }
   };
 
-  const filteredList = expiringPointsList.filter(p => p.expiringPoints >= minPointsFilter);
+  const filteredList = expiringPointsList.filter(
+    (p) => p.expiringPoints >= minPointsFilter
+  );
 
   return (
-    <div className="min-h-screen bg-gradient-to-r from-purple-50 via-white to-blue-50 p-6">
-      <div className="max-w-5xl mx-auto space-y-6">
+    <div className="w-screen h-screen bg-gradient-to-r from-purple-100 via-white to-blue-100 p-8 overflow-y-auto">
+      <div className="w-full space-y-8">
         {/* Header */}
-        <div className="flex items-center justify-between mb-6">
+        <div className="flex items-center justify-between">
           <button
-            className="text-blue-600 underline flex items-center gap-1"
+            className="text-blue-700 hover:text-blue-900 transition flex items-center gap-1 font-medium"
             onClick={() => navigate(-1)}
           >
             &larr; Back
           </button>
-          <h1 className="text-3xl font-bold text-gray-900 flex items-center gap-2">
-            <Clock className="w-8 h-8 text-purple-500" />
+          <h1 className="text-3xl md:text-4xl font-extrabold text-gray-900 flex items-center gap-3">
+            <Clock className="w-9 h-9 text-purple-600 animate-pulse" />
             Points Expiry Management
           </h1>
         </div>
 
         {/* Filter */}
-        <div className="flex items-center gap-4 mb-4">
-          <label className="text-gray-700 font-medium">Show points ≥</label>
+        <div className="flex items-center gap-3 bg-white p-4 rounded-xl shadow-md border">
+          <label className="text-gray-800 font-semibold">Show points ≥</label>
           <input
             type="number"
             value={minPointsFilter}
             onChange={(e) => setMinPointsFilter(Number(e.target.value))}
-            className="border p-2 rounded w-24"
+            className="border border-gray-300 focus:ring-2 focus:ring-purple-400 focus:outline-none p-2 rounded-lg w-28 text-center text-gray-900 font-medium"
             min={0}
           />
         </div>
 
-        {loading && <p className="text-gray-600">Loading...</p>}
-        {error && <p className="text-red-600 mb-4">{error}</p>}
+        {/* Loader / Error */}
+        {loading && (
+          <p className="text-gray-600 animate-pulse text-lg">Loading...</p>
+        )}
+        {error && (
+          <p className="text-red-600 bg-red-50 border border-red-200 p-3 rounded-lg">
+            {error}
+          </p>
+        )}
 
+        {/* Empty State */}
         {filteredList.length === 0 && !loading && (
-          <p className="text-gray-700">No customers have points expiring soon.</p>
+          <div className="flex flex-col items-center justify-center py-12">
+            <Clock className="w-12 h-12 text-gray-400 mb-3" />
+            <p className="text-gray-600 text-lg font-medium">
+              No customers have points expiring soon.
+            </p>
+          </div>
         )}
 
         {/* Expiring Points List */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
           {filteredList.map(({ customerId, name, email, expiringPoints }) => (
             <div
               key={customerId}
-              className="bg-white rounded-2xl shadow-md p-5 hover:shadow-xl transition-shadow duration-300 border-l-4 border-purple-500"
+              className="bg-white rounded-2xl shadow-lg hover:shadow-2xl transition duration-300 border-l-4 border-purple-600 p-6 flex flex-col justify-between"
             >
-              <div className="flex items-center gap-2 mb-2">
-                <UserCheck className="w-5 h-5 text-purple-600" />
-                <h2 className="text-xl font-semibold">{name}</h2>
+              <div>
+                <div className="flex items-center gap-2 mb-3">
+                  <UserCheck className="w-6 h-6 text-purple-700" />
+                  <h2 className="text-xl font-bold text-gray-900">{name}</h2>
+                </div>
+                <p className="text-gray-600 mb-2">
+                  <strong>Email:</strong> {email}
+                </p>
               </div>
-              <p className="text-gray-600 mb-1"><strong>Email:</strong> {email}</p>
-              <p className="text-gray-800 font-medium">
-                <span className="bg-gradient-to-r from-purple-400 to-blue-400 text-white px-3 py-1 rounded-full shadow-md">
+              <div className="mt-4">
+                <span className="inline-block bg-gradient-to-r from-purple-500 to-blue-500 text-white text-sm font-semibold px-4 py-2 rounded-full shadow-md">
                   {expiringPoints} Points
                 </span>
-              </p>
+              </div>
             </div>
           ))}
         </div>
