@@ -275,7 +275,7 @@ const Customer = () => {
                   >
                     <p className="text-lg font-semibold text-gray-800">
                       Amount:{" "}
-                      <span className="text-indigo-600">${t.amount}</span>
+                      <span className="text-indigo-600">₹{t.amount}</span>
                     </p>
                     <p className="text-gray-700">
                       <strong>Category:</strong> {t.category}

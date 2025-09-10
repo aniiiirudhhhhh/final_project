@@ -1,7 +1,25 @@
 const Transaction = require("../models/Transaction");
 const RewardPolicy = require("../models/RewardPolicy");
 const User = require("../models/User");
+// const { evaluateRules } = require("../utils/rulesEngine");
+// // const RewardPolicy = require("../models/RewardPolicy");
 
+// exports.addTransaction = async (req, res) => {
+//   try {
+//     const { userId, category, amount } = req.body;
+
+//     const policy = await RewardPolicy.findOne({ adminId: req.user.id });
+//     if (!policy) return res.status(404).json({ error: "Policy not found" });
+
+//     // Use rules engine
+//     const points = evaluateRules(policy.dynamicRules || [], { category, amount });
+
+//     // Save transaction + update user points...
+//     res.json({ message: "Transaction processed", earnedPoints: points });
+//   } catch (err) {
+//     res.status(500).json({ error: err.message });
+//   }
+// };
 // Customer makes a purchase
 exports.addTransaction = async (req, res) => {
   try {

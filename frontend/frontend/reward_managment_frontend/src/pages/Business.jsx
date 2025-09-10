@@ -61,7 +61,7 @@ const Business = () => {
     localStorage.removeItem("token");
     localStorage.removeItem("user");
     setProfileMenuOpen(false);
-    navigate("/login/admin");
+    navigate("/dashboard");
   };
 
   const navLinks = [

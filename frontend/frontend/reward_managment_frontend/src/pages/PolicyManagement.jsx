@@ -2,7 +2,8 @@ import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import API from "../api";
 import { FileText, Tag, Gift } from "lucide-react";
-import { PieChart, Pie, Cell, ResponsiveContainer } from "recharts";
+import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from "recharts";
+
 
 const PolicyManagement = () => {
   const [policy, setPolicy] = useState(null);
@@ -475,17 +476,26 @@ const PolicyManagement = () => {
               <div className="mt-6 h-40 w-40 mx-auto">
                 <ResponsiveContainer width="100%" height="100%">
                   <PieChart>
-                    <Pie
-                      data={thresholds.map((t, i) => ({ name: `Tier ${i + 1}`, value: t.bonusPoints }))}
-                      dataKey="value"
-                      nameKey="name"
-                      outerRadius={60}
-                    >
-                      {thresholds.map((t, i) => (
-                        <Cell key={i} fill={COLORS[i % COLORS.length]} />
-                      ))}
-                    </Pie>
-                  </PieChart>
+  <Pie
+    data={thresholds.map((t, i) => ({
+      name: `Tier ${i + 1}`,
+      value: t.bonusPoints,
+    }))}
+    dataKey="value"
+    nameKey="name"
+    outerRadius={70}
+    label={({ name, value, percent }) =>
+      `${name}: ${value} (${(percent * 100).toFixed(0)}%)`
+    } // 👈 Show Tier, points, and percentage
+    labelLine={false} // 👈 cleaner look
+  >
+    {thresholds.map((t, i) => (
+      <Cell key={i} fill={COLORS[i % COLORS.length]} />
+    ))}
+  </Pie>
+  <Tooltip formatter={(value, name) => [`${value} pts`, name]} />
+</PieChart>
+
                 </ResponsiveContainer>
               </div>
             )}
