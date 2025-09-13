@@ -27,6 +27,14 @@ const transactionSchema = new mongoose.Schema({
     type: Number,
     default: 0,
   },
+  redeemedAmount: {
+    type: Number,
+    default: 0, // 💡 amount reduced based on redeemed points
+  },
+  finalAmount: {
+    type: Number,
+    required: true, // 💡 actual amount after redemption
+  },
   finalPoints: {
     type: Number,
     default: 0,

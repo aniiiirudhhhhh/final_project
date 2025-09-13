@@ -2,10 +2,14 @@ import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import api from "../api";
 
+const POINTS_EXPIRY_WARNING_DAYS = 30;
+
 const CustomerProfile = () => {
   const [profile, setProfile] = useState(null);
   const [pointsBalance, setPointsBalance] = useState(0);
   const [lifetimeSpend, setLifetimeSpend] = useState(0);
+  const [tier, setTier] = useState("No tier assigned");
+  const [expiringPoints, setExpiringPoints] = useState(0);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
@@ -20,21 +24,44 @@ const CustomerProfile = () => {
       .reduce((sum, p) => sum + p.points, 0);
   };
 
+  const calculateExpiringPoints = (pointsHistory) => {
+    if (!pointsHistory) return 0;
+    const now = new Date();
+    return pointsHistory
+      .filter(
+        (p) =>
+          !p.redeemed &&
+          new Date(p.expiresAt) > now &&
+          (new Date(p.expiresAt) - now) / (1000 * 60 * 60 * 24) <=
+            POINTS_EXPIRY_WARNING_DAYS
+      )
+      .reduce((sum, p) => sum + p.points, 0);
+  };
+
   useEffect(() => {
     const fetchData = async () => {
       try {
         setLoading(true);
         const [profileRes, transactionsRes] = await Promise.all([
-          api.get("/customer/me", { headers: { Authorization: `Bearer ${token}` } }),
-          api.get("/transactions/history", { headers: { Authorization: `Bearer ${token}` } }),
+          api.get("/customer/me", {
+            headers: { Authorization: `Bearer ${token}` },
+          }),
+          api.get("/transactions/history", {
+            headers: { Authorization: `Bearer ${token}` },
+          }),
         ]);
         const profileData = profileRes.data;
 
         setProfile(profileData);
         setPointsBalance(calculateActivePoints(profileData.pointsHistory));
+        setTier(profileData.tier || "No tier assigned");
+        setExpiringPoints(calculateExpiringPoints(profileData.pointsHistory));
 
         const transactions = transactionsRes.data.transactions || [];
-        const totalSpend = transactions.reduce((sum, tx) => sum + (tx.amount || 0), 0);
+        const totalSpend = transactions.reduce(
+          (sum, tx) => sum + (tx.amount || 0),
+          0
+        );
         setLifetimeSpend(totalSpend);
 
         setError("");
@@ -93,13 +120,33 @@ const CustomerProfile = () => {
             <p className="text-center text-red-600 font-semibold">{error}</p>
           ) : profile ? (
             <div className="text-gray-800 space-y-4">
-              <p><strong>Name:</strong> {profile.name}</p>
-              <p><strong>Email:</strong> {profile.email}</p>
-              <p><strong>Points Balance:</strong> {pointsBalance}</p>
-              <p><strong>Lifetime Spend:</strong> ₹{lifetimeSpend.toLocaleString()}</p>
+              <p>
+                <strong>Name:</strong> {profile.name}
+              </p>
+              <p>
+                <strong>Email:</strong> {profile.email}
+              </p>
+              <p>
+                <strong>Tier:</strong> {tier}
+              </p>
+              <p>
+                <strong>Points Balance:</strong> {pointsBalance}
+              </p>
+              {expiringPoints > 0 && (
+                <p className="text-red-600 font-semibold">
+                  ⚠️ You have <strong>{expiringPoints}</strong> points expiring
+                  within {POINTS_EXPIRY_WARNING_DAYS} days!
+                </p>
+              )}
+              <p>
+                <strong>Lifetime Spend:</strong> ₹
+                {lifetimeSpend.toLocaleString()}
+              </p>
             </div>
           ) : (
-            <p className="text-center text-gray-600">No profile data available.</p>
+            <p className="text-center text-gray-600">
+              No profile data available.
+            </p>
           )}
         </div>
       </main>

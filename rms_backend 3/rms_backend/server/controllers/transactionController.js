@@ -1,97 +1,74 @@
 const Transaction = require("../models/Transaction");
 const RewardPolicy = require("../models/RewardPolicy");
 const User = require("../models/User");
-// const { evaluateRules } = require("../utils/rulesEngine");
-// // const RewardPolicy = require("../models/RewardPolicy");
 
-// exports.addTransaction = async (req, res) => {
-//   try {
-//     const { userId, category, amount } = req.body;
-
-//     const policy = await RewardPolicy.findOne({ adminId: req.user.id });
-//     if (!policy) return res.status(404).json({ error: "Policy not found" });
-
-//     // Use rules engine
-//     const points = evaluateRules(policy.dynamicRules || [], { category, amount });
-
-//     // Save transaction + update user points...
-//     res.json({ message: "Transaction processed", earnedPoints: points });
-//   } catch (err) {
-//     res.status(500).json({ error: err.message });
-//   }
-// };
+// =========================
 // Customer makes a purchase
-exports.addTransaction = async (req, res) => {
+// =========================
+const addTransaction = async (req, res) => {
   try {
     const customerId = req.user._id;
+    // default redeemPoints = 0 if not provided
     const { amount, category, redeemPoints = 0, adminId } = req.body;
 
     if (!adminId) return res.status(400).json({ message: "Admin ID is required" });
 
-    // Fetch admin's reward policy
     const policy = await RewardPolicy.findOne({ adminId });
     if (!policy) return res.status(404).json({ message: "No reward policy found for this business" });
 
-    // Fetch customer
     const customer = await User.findById(customerId);
     if (!customer) return res.status(404).json({ message: "Customer not found" });
 
-    // Points calculation parts
+    if (!Array.isArray(customer.pointsHistory)) customer.pointsHistory = [];
+    const now = new Date();
+
+    // --- Tier Multiplier ---
     let tierMultiplier = 1;
     if (customer.tier) {
-      const tierRule = policy.tierRules.find(t => t.tierName === customer.tier);
+      const tierRule = policy.tierRules?.find(t => t.tierName === customer.tier);
       if (tierRule) tierMultiplier = tierRule.multiplier;
     }
 
-    // Calculate base points (fallback)
-    const basePoints = Math.floor((amount / 100) * policy.basePointsPer100);
+    // --- Base Points ---
+    const basePoints = Math.floor((amount / 100) * (policy.basePointsPer100 || 0));
 
-    // Calculate category points if applicable
+    // --- Category Points ---
     let categoryPoints = 0;
-    const categoryRule = policy.categoryRules.find(c => c.category === category);
-    if (categoryRule) {
-      categoryPoints = amount >= categoryRule.minAmount
-        ? Math.floor((amount / 100) * categoryRule.pointsPer100) + (categoryRule.bonusPoints || 0)
-        : basePoints;
-    } else {
-      categoryPoints = basePoints;
-    }
-
-    // Apply tier multiplier
-    let earnedPoints = Math.floor(categoryPoints * tierMultiplier);
-
-    // Calculate spend threshold bonus points
-    let thresholdBonus = 0;
-    if (policy.spendThresholds?.length) {
-      policy.spendThresholds.forEach(threshold => {
-        if (amount >= threshold.minAmount) thresholdBonus += threshold.bonusPoints;
-      });
-    }
-    earnedPoints += thresholdBonus;
-
-    // Add points with expiry
-    if (earnedPoints > 0) {
-      const expiryDays = policy.pointsExpiryDays || 365;
-      if (typeof customer.addPoints === 'function') {
-        customer.addPoints(earnedPoints, expiryDays);
-      } else {
-        const now = new Date();
-        const expiresAt = new Date(now.getTime() + expiryDays * 24 * 60 * 60 * 1000);
-        customer.pointsHistory.push({ points: earnedPoints, redeemed: false, expiresAt });
+    if (category) {
+      const categoryRule = policy.categoryRules?.find(c => c.category === category);
+      if (categoryRule && amount >= categoryRule.minAmount) {
+        categoryPoints = Math.floor((amount / 100) * categoryRule.pointsPer100) + (categoryRule.bonusPoints || 0);
       }
     }
 
-    // Redeem points logic (unchanged)
-    const now = new Date();
-    let availablePoints = customer.pointsHistory
+    // --- Threshold Bonus ---
+    let thresholdBonus = 0;
+    if (policy.spendThresholds?.length) {
+      policy.spendThresholds.forEach(threshold => {
+        if (amount >= threshold.minAmount) thresholdBonus += threshold.bonusPoints || 0;
+      });
+    }
+
+    // --- Total Earned Points ---
+    const earnedPoints = Math.floor((basePoints + categoryPoints) * tierMultiplier + thresholdBonus);
+
+    // --- Add Points to Customer ---
+    if (earnedPoints > 0) {
+      const expiryDays = policy.pointsExpiryDays || 365;
+      const expiresAt = new Date(now.getTime() + expiryDays * 24 * 60 * 60 * 1000);
+      customer.pointsHistory.push({ points: earnedPoints, redeemed: false, expiresAt });
+    }
+
+    // --- Redeem Points ---
+    let remaining = redeemPoints || 0; // ensure default 0
+    const availablePoints = customer.pointsHistory
       .filter(p => !p.redeemed && p.expiresAt > now)
       .reduce((sum, p) => sum + p.points, 0);
 
-    if (redeemPoints > availablePoints) {
+    if (remaining > availablePoints) {
       return res.status(400).json({ message: "Not enough valid points to redeem" });
     }
 
-    let remaining = redeemPoints;
     for (const entry of customer.pointsHistory) {
       if (remaining <= 0) break;
       if (entry.redeemed || entry.expiresAt <= now) continue;
@@ -105,12 +82,16 @@ exports.addTransaction = async (req, res) => {
       }
     }
 
-    // Recalculate balance
+    const redemptionRules = policy.redemptionRules || { valuePerPoint: 0.1 };
+    const redeemedAmount = remaining > 0 ? remaining * redemptionRules.valuePerPoint : redeemPoints * redemptionRules.valuePerPoint;
+    const finalAmount = Math.max(0, amount - redeemedAmount);
+
+    // --- Update Points Balance ---
     customer.pointsBalance = customer.pointsHistory
       .filter(p => !p.redeemed && p.expiresAt > now)
       .reduce((sum, p) => sum + p.points, 0);
 
-    // Auto-assign tier
+    // --- Auto-assign Tier ---
     if (policy.tierRules?.length) {
       const sortedTiers = [...policy.tierRules].sort((a, b) => b.minPoints - a.minPoints);
       for (const tierRule of sortedTiers) {
@@ -123,21 +104,23 @@ exports.addTransaction = async (req, res) => {
 
     await customer.save();
 
-    // Save transaction
+    // --- Save Transaction ---
     const transaction = await Transaction.create({
       adminId,
       customerId,
       amount,
       category,
       earnedPoints,
-      redeemedPoints: redeemPoints,
+      redeemedPoints: redeemPoints || 0, // always defined
+      redeemedAmount,
+      finalAmount,
       finalPoints: customer.pointsBalance,
     });
 
-    // Respond with detailed points breakdown
+    // --- Response ---
     res.status(201).json({
       transaction,
-      currentTier: customer.tier,
+      currentTier: customer.tier || "No tier assigned",
       currentBalance: customer.pointsBalance,
       pointsBreakdown: {
         basePoints,
@@ -145,16 +128,40 @@ exports.addTransaction = async (req, res) => {
         tierMultiplier,
         thresholdBonus,
         totalEarnedPoints: earnedPoints,
-      }
+      },
+      paymentBreakdown: {
+        originalAmount: amount,
+        redeemedAmount,
+        finalAmount,
+      },
     });
-
   } catch (err) {
-    console.error(err);
+    console.error("Add Transaction Error:", err);
     res.status(500).json({ message: err.message });
   }
 };
-// Fetch transaction history for a specific customer (admin)
-exports.getCustomerHistory = async (req, res) => {
+
+// =========================
+// Other Controllers (unchanged)
+const getHistory = async (req, res) => {
+  try {
+    const customerId = req.user._id;
+    const customer = await User.findById(customerId);
+    if (!customer) return res.status(404).json({ message: "Customer not found" });
+
+    const transactions = await Transaction.find({ customerId }).sort({ createdAt: -1 });
+    res.json({
+      currentBalance: customer.pointsBalance,
+      tier: customer.tier || "No tier assigned",
+      transactions,
+    });
+  } catch (err) {
+    console.error("Get History Error:", err);
+    res.status(500).json({ message: err.message });
+  }
+};
+
+const getCustomerHistory = async (req, res) => {
   try {
     const { customerId } = req.params;
     const customer = await User.findById(customerId);
@@ -165,19 +172,18 @@ exports.getCustomerHistory = async (req, res) => {
       customer: {
         name: customer.name,
         email: customer.email,
-        tier: customer.tier,
+        tier: customer.tier || "No tier assigned",
         pointsBalance: customer.pointsBalance,
       },
       transactions,
     });
   } catch (err) {
-    console.error(err);
+    console.error("Get Customer History Error:", err);
     res.status(500).json({ message: err.message });
   }
 };
 
-// Get expiring points for admin
-exports.getExpiringPoints = async (req, res) => {
+const getExpiringPoints = async (req, res) => {
   try {
     const adminId = req.user._id;
     const customers = await User.find({ adminId, role: "customer" });
@@ -185,36 +191,27 @@ exports.getExpiringPoints = async (req, res) => {
     const now = new Date();
     const warningDays = 30;
 
-    const result = customers.map(c => {
-      const expiringPoints = c.pointsHistory
-        .filter(p => !p.redeemed && p.expiresAt > now && (p.expiresAt - now) / (1000*60*60*24) <= warningDays)
-        .reduce((sum, p) => sum + p.points, 0);
-
-      return { customerId: c._id, name: c.name, email: c.email, expiringPoints };
-    }).filter(c => c.expiringPoints > 0);
+    const result = customers
+      .map(c => {
+        const expiringPoints = c.pointsHistory
+          .filter(p => !p.redeemed && p.expiresAt > now && (p.expiresAt - now) / (1000*60*60*24) <= warningDays)
+          .reduce((sum, p) => sum + p.points, 0);
+        return { customerId: c._id, name: c.name, email: c.email, expiringPoints };
+      })
+      .filter(c => c.expiringPoints > 0);
 
     res.json(result);
   } catch (err) {
-    console.error(err);
+    console.error("Get Expiring Points Error:", err);
     res.status(500).json({ message: err.message });
   }
 };
 
-// Get transaction history for logged-in customer
-exports.getHistory = async (req, res) => {
-  try {
-    const customerId = req.user._id;
-    const customer = await User.findById(customerId);
-    if (!customer) return res.status(404).json({ message: "Customer not found" });
-
-    const transactions = await Transaction.find({ customerId }).sort({ createdAt: -1 });
-    res.json({
-      currentBalance: customer.pointsBalance,
-      tier: customer.tier,
-      transactions,
-    });
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ message: err.message });
-  }
+// =========================
+// Export Controllers
+module.exports = {
+  addTransaction,
+  getHistory,
+  getCustomerHistory,
+  getExpiringPoints,
 };

@@ -6,7 +6,7 @@ const userSchema = new mongoose.Schema({
   email: { type: String, required: true, unique: true },
   password: { type: String, required: true },
   role: { type: String, enum: ["admin", "customer"], default: "customer" },
-  adminId: { type: mongoose.Schema.Types.ObjectId, ref: "User" }, // ✅ link to Admin
+  adminId: { type: mongoose.Schema.Types.ObjectId, ref: "User" }, //  link to Admin
   pointsBalance: { type: Number, default: 0 },
 
   // ✅ Tier system fields

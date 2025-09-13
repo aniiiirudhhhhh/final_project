@@ -16,12 +16,15 @@ const CustomerTransactions = () => {
   const fetchTransactions = async (pageNum = 1) => {
     try {
       setLoading(true);
-
-      const historyRes = await api.get(`/transactions/history?page=${pageNum}&limit=${pageSize}`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-
-      const txns = Array.isArray(historyRes.data.transactions) ? historyRes.data.transactions : [];
+      const historyRes = await api.get(
+        `/transactions/history?page=${pageNum}&limit=${pageSize}`,
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
+      const txns = Array.isArray(historyRes.data.transactions)
+        ? historyRes.data.transactions
+        : [];
       setTransactions(txns);
       setHasMore(txns.length === pageSize);
       setPage(pageNum);
@@ -52,7 +55,10 @@ const CustomerTransactions = () => {
     <div className="w-screen h-screen bg-gradient-to-br from-blue-100 to-indigo-200 flex flex-col">
       {/* Header */}
       <header className="bg-indigo-700 text-white px-6 py-4 flex justify-between items-center sticky top-0 z-50 shadow">
-        <h1 className="text-xl font-bold cursor-pointer" onClick={() => navigate("/customer")}>
+        <h1
+          className="text-xl font-bold cursor-pointer"
+          onClick={() => navigate("/customer")}
+        >
           Loyalty Program
         </h1>
         <nav className="flex items-center space-x-4 md:space-x-6">
@@ -74,7 +80,9 @@ const CustomerTransactions = () => {
       {/* Main Content */}
       <main className="flex-1 overflow-y-auto p-4 md:p-6 flex justify-center items-start">
         <div className="w-full max-w-5xl bg-white rounded-2xl p-6 md:p-8 shadow-lg">
-          <h2 className="text-2xl font-bold mb-6 text-indigo-700 text-center">Transaction History</h2>
+          <h2 className="text-2xl font-bold mb-6 text-indigo-700 text-center">
+            Transaction History
+          </h2>
 
           {loading ? (
             <p className="text-center text-gray-600">Loading transactions...</p>
@@ -84,7 +92,11 @@ const CustomerTransactions = () => {
             <p className="text-center text-gray-600">No transactions found.</p>
           ) : (
             <>
-              <div className="grid gap-4 md:grid-cols-2" role="list" aria-label="Customer transaction history">
+              <div
+                className="grid gap-4 md:grid-cols-2"
+                role="list"
+                aria-label="Customer transaction history"
+              >
                 {transactions.map((t) => (
                   <div
                     key={t._id}
@@ -92,17 +104,44 @@ const CustomerTransactions = () => {
                     role="listitem"
                   >
                     <p className="text-lg font-semibold text-gray-800">
-                      Amount: <span className="text-indigo-600">${t.amount}</span>
+                      Amount: <span className="text-indigo-600">₹{t.amount}</span>
                     </p>
                     <p className="text-gray-700">
                       <strong>Category:</strong> {t.category}
                     </p>
-                    <p className="text-green-600 font-semibold">+ Earned Points: {t.earnedPoints}</p>
-                    <p className="text-red-600 font-semibold">- Redeemed Points: {t.redeemedPoints}</p>
-                    <p className="text-blue-700 font-bold">Final Balance: {t.finalPoints}</p>
-                    <p className="text-sm text-gray-500 mt-2">{new Date(t.createdAt).toLocaleString()}</p>
+                    <p className="text-green-600 font-semibold">
+                      + Earned Points: {t.earnedPoints}
+                    </p>
+                    <p className="text-red-600 font-semibold">
+                      - Redeemed Points: {t.redeemedPoints}
+                    </p>
+                    <p className="text-blue-700 font-bold">
+                      Final Balance: {t.finalPoints}
+                    </p>
+                    <p className="text-sm text-gray-500 mt-2">
+                      {new Date(t.createdAt).toLocaleString()}
+                    </p>
                   </div>
                 ))}
+              </div>
+
+              {/* Pagination */}
+              <div className="flex justify-center items-center mt-6 space-x-4">
+                <button
+                  onClick={() => handlePageChange(page - 1)}
+                  disabled={page === 1 || loading}
+                  className="bg-indigo-500 hover:bg-indigo-600 px-4 py-2 rounded text-white font-semibold disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  Prev
+                </button>
+                <span className="font-semibold text-gray-700">Page {page}</span>
+                <button
+                  onClick={() => handlePageChange(page + 1)}
+                  disabled={!hasMore || loading}
+                  className="bg-indigo-500 hover:bg-indigo-600 px-4 py-2 rounded text-white font-semibold disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  Next
+                </button>
               </div>
             </>
           )}
