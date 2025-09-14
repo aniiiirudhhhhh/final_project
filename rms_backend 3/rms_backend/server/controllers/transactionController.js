@@ -69,6 +69,7 @@ const addTransaction = async (req, res) => {
       return res.status(400).json({ message: "Not enough valid points to redeem" });
     }
 
+    // Redeem points from oldest unredeemed, unexpired points first
     for (const entry of customer.pointsHistory) {
       if (remaining <= 0) break;
       if (entry.redeemed || entry.expiresAt <= now) continue;
@@ -82,8 +83,9 @@ const addTransaction = async (req, res) => {
       }
     }
 
-    const redemptionRules = policy.redemptionRules || { valuePerPoint: 0.1 };
-    const redeemedAmount = remaining > 0 ? remaining * redemptionRules.valuePerPoint : redeemPoints * redemptionRules.valuePerPoint;
+    // Use policy redemptionRate (points to currency)
+    const redemptionRate = policy.redemptionRate || 1; // default 1 currency unit per point
+    const redeemedAmount = redeemPoints * redemptionRate;
     const finalAmount = Math.max(0, amount - redeemedAmount);
 
     // --- Update Points Balance ---
