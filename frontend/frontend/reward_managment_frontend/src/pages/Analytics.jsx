@@ -171,7 +171,7 @@ const Analytics = () => {
               <p className="text-gray-600 text-lg">Comprehensive overview of your reward policy performance</p>
             </div>
 
-            {/* ✅ Added Dashboard Button */}
+            {/*  Dashboard  */}
             <div className="flex gap-4">
               <button
                 onClick={fetchSummary}
@@ -271,8 +271,8 @@ const Analytics = () => {
                     <th className="text-left p-4">Name</th>
                     <th className="text-left p-4">Email</th>
                     <th className="text-left p-4">Tier</th>
-                    <th className="text-left p-4">Total Spent</th>
-                    <th className="text-left p-4">Points Earned</th>
+                    <th className="text-center p-4">Total Spent</th>
+                    <th className="text-center p-4">Points Earned</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -281,8 +281,8 @@ const Analytics = () => {
                       <td className="p-4">{idx===0 ? "🥇 " : idx===1 ? "🥈 " : idx===2 ? "🥉 " : ""}{name}</td>
                       <td className="p-4">{email}</td>
                       <td className="p-4">{tier}</td>
-                      <td className="p-4">${totalSpent?.toFixed(2)}</td>
-                      <td className="p-4">{totalPoints}</td>
+                      <td className="text-center p-4">₹{totalSpent?.toFixed(2)}</td>
+                      <td className="text-center p-4">{totalPoints}</td>
                     </tr>
                   ))}
                 </tbody>

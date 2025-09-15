@@ -216,7 +216,7 @@ const Customer = () => {
           <section className="mb-6 p-5 bg-indigo-50 border border-indigo-200 rounded-xl text-center">
             <p className="text-2xl font-bold text-indigo-700">Current Points Balance</p>
             <p className="text-4xl font-extrabold text-indigo-900 mt-2">{balance}</p>
-            <p className="mt-2 text-indigo-700 font-semibold">Points You Will Earn: {previewPoints}</p>
+            {/* <p className="mt-2 text-indigo-700 font-semibold">Points You Will Earn: {previewPoints}</p> */}
 
             {pointsBreakdown && (
               <div className="mt-4 text-left text-indigo-800 max-w-md mx-auto bg-indigo-100 p-3 rounded">
@@ -268,7 +268,7 @@ const Customer = () => {
                     <p className="text-gray-700"><strong>Category:</strong> {t.category || "Not entered"}</p>
                     <p className="text-green-600 font-semibold">+ Earned: {t.earnedPoints || 0}</p>
                     <p className="text-red-600 font-semibold">- Redeemed: {t.redeemedPoints || 0} (₹{t.redeemedAmount || 0})</p>
-                    <p className="text-green-700 font-bold">Final Amount Paid: ₹{t.finalAmount || t.amount}</p>
+                    <p className="text-green-700 font-bold">Final Amount Paid: ₹{t.finalAmount !== undefined && t.finalAmount !== null ? t.finalAmount : t.amount}</p>
                     <p className="text-blue-700 font-bold">Final Balance: {t.finalPoints || balance}</p>
                     <p className="text-sm text-gray-500 mt-2">{new Date(t.createdAt).toLocaleString()}</p>
                   </div>

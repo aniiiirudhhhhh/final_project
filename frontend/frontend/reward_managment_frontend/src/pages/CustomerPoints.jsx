@@ -13,6 +13,11 @@ const CustomerPoints = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
+  // New state for exact days until points expire
+  const [daysUntilExpiry, setDaysUntilExpiry] = useState(null);
+  // Map for tier benefits fetched from backend
+  const [tierBenefitsMap, setTierBenefitsMap] = useState({});
+
   const token = localStorage.getItem("token");
   const navigate = useNavigate();
 
@@ -30,6 +35,36 @@ const CustomerPoints = () => {
       .reduce((sum, p) => sum + p.points, 0);
   };
 
+  // New: Calculate exact days until soonest points expire
+  const calculateDaysUntilExpiry = (pointsHistory) => {
+    if (!pointsHistory || pointsHistory.length === 0) return null;
+    const now = new Date();
+    const validPoints = pointsHistory.filter(
+      (p) => !p.redeemed && new Date(p.expiresAt) > now
+    );
+    if (validPoints.length === 0) return null;
+    const daysList = validPoints.map((p) =>
+      Math.ceil((new Date(p.expiresAt) - now) / (1000 * 60 * 60 * 24))
+    );
+    return Math.min(...daysList);
+  };
+
+  // Fetch tier benefits map from backend policy controller
+  const fetchTierBenefits = async (adminId) => {
+  try {
+    const res = await api.get(`/admin/policy/customer-tier-rules/${adminId}`, {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    const map = {};
+    res.data.tierRules?.forEach(rule => {
+      map[rule.tierName] = rule.benefits || "No benefits defined.";
+    });
+    setTierBenefitsMap(map);
+  } catch (err) {
+    console.error("Failed to fetch tier benefits:", err);
+  }
+};
+
   useEffect(() => {
     const fetchPointsInfo = async () => {
       try {
@@ -43,16 +78,12 @@ const CustomerPoints = () => {
         setTier(data.tier || "No tier assigned");
         setPointsExpiryDays(data.pointsExpiryDays || 365);
         setExpiringPoints(calculateExpiringPoints(data.pointsHistory));
+        setDaysUntilExpiry(calculateDaysUntilExpiry(data.pointsHistory));
 
-        const benefitsMap = {
-          Silver: "Basic benefits like discounts and exclusive offers.",
-          Gold: "All Silver benefits plus priority support and special rewards.",
-          Platinum:
-            "All Gold benefits plus highest priority, VIP access, and premium offers.",
-        };
-        setTierBenefits(
-          benefitsMap[data.tier] || "No benefits available for this tier."
-        );
+        if (data.adminId) {
+          await fetchTierBenefits(data.adminId);
+        }
+
         setError("");
       } catch (err) {
         console.error("Error fetching points info:", err);
@@ -112,21 +143,19 @@ const CustomerPoints = () => {
               <p className="text-2xl font-extrabold text-indigo-900 mb-4">
                 Points Available: <span>{pointsBalance}</span>
               </p>
-              <p className="mb-4">
-                Points expire after{" "}
-                <strong>{pointsExpiryDays}</strong> days from earning.
-              </p>
 
-              {/* Expiring Points Warning */}
-              {expiringPoints > 0 && (
+              {/* Expiring Points Warning with exact days */}
+              {expiringPoints > 0 && daysUntilExpiry !== null && (
                 <p className="text-red-600 font-semibold mb-4">
-                  ⚠️ You have <strong>{expiringPoints}</strong> points expiring
-                  within {POINTS_EXPIRY_WARNING_DAYS} days!
+                  ⚠️ You have <strong>{expiringPoints}</strong> points expiring in{" "}
+                  <strong>{daysUntilExpiry}</strong> day{daysUntilExpiry > 1 ? "s" : ""}!
                 </p>
               )}
 
               <p className="text-xl font-semibold mb-2">Tier: {tier}</p>
-              <p className="text-gray-700">{tierBenefits}</p>
+              <p className="text-gray-700">
+                {tierBenefitsMap[tier] || "No benefits available for this tier."}
+              </p>
             </>
           )}
         </div>

@@ -70,7 +70,7 @@ const TransHistory = () => {
               <div className="flex items-center justify-between mb-4">
                 <span className="flex items-center gap-2 font-semibold text-lg text-purple-700">
                   <DollarSign className="w-5 h-5 text-green-500" />
-                  ${t.amount}
+                  ₹{t.amount}
                 </span>
                 <span className="text-xs text-gray-500">
                   {new Date(t.createdAt).toLocaleDateString()}

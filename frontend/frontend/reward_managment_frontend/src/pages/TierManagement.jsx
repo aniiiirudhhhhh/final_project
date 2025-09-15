@@ -133,10 +133,12 @@ const TierManagement = () => {
   const platinumCount = customers.filter((c) => c.tier === "Platinum").length;
 
   return (
-    <div className="w-screen min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 p-10 w-full">
+    <div className="w-screen min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 p-6 md:p-10">
       {/* Header */}
-      <header className="mb-10 flex justify-between items-center w-full">
-        <h1 className="text-4xl font-extrabold text-indigo-700">Tier Management</h1>
+      <header className="mb-8 flex flex-col md:flex-row justify-between items-start md:items-center w-full">
+        <h1 className="text-3xl md:text-4xl font-extrabold text-indigo-700 mb-4 md:mb-0">
+          Tier Management
+        </h1>
         <button
           onClick={() => navigate("/business")}
           className="bg-indigo-600 text-white px-6 py-3 rounded-lg shadow hover:bg-indigo-700"
@@ -146,7 +148,7 @@ const TierManagement = () => {
       </header>
 
       {/* Summary Cards */}
-      <div className="grid grid-cols-4 gap-8 mb-12 w-full">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-12 w-full">
         <div className="bg-white p-6 rounded-xl shadow flex items-center space-x-4">
           <Users className="text-indigo-600" size={28} />
           <div>
@@ -184,11 +186,11 @@ const TierManagement = () => {
         {tierRules.length === 0 ? (
           <p>No tier rules defined yet.</p>
         ) : (
-          <div className="grid grid-cols-3 gap-8 w-full">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 w-full">
             {tierRules.map((rule) => (
               <div
                 key={rule.tierName}
-                className="bg-white p-8 rounded-xl shadow hover:shadow-lg transition"
+                className="bg-white p-6 rounded-xl shadow hover:shadow-lg transition mb-4 lg:mb-0"
               >
                 <h3 className="text-2xl font-bold text-indigo-600 mb-3">
                   {rule.tierName}
@@ -199,9 +201,7 @@ const TierManagement = () => {
                 <p className="text-gray-700 mb-1">
                   Multiplier: <strong>{rule.multiplier}</strong>
                 </p>
-                <p className="text-gray-700">
-                  Benefits: {rule.benefits || "N/A"}
-                </p>
+                <p className="text-gray-700">{rule.benefits || "N/A"}</p>
               </div>
             ))}
           </div>
@@ -211,7 +211,7 @@ const TierManagement = () => {
       {/* Form Section */}
       <section className="mb-16 w-full">
         <h2 className="text-3xl font-bold mb-6 text-indigo-700">Add / Edit Tier Rule</h2>
-        <div className="bg-white p-8 rounded-xl shadow grid grid-cols-2 gap-8 w-full">
+        <div className="bg-white p-6 rounded-xl shadow grid grid-cols-1 md:grid-cols-2 gap-6 w-full">
           <div>
             <label className="block text-sm font-semibold mb-2">Tier Name</label>
             <select
@@ -262,11 +262,11 @@ const TierManagement = () => {
               placeholder="Enter tier benefits"
             />
           </div>
-          <div className="col-span-2">
+          <div className="col-span-1 md:col-span-2">
             <button
               onClick={handleSave}
               disabled={loading}
-              className="bg-indigo-600 text-white px-6 py-3 rounded-lg hover:bg-indigo-700 disabled:opacity-50"
+              className="bg-indigo-600 text-white px-6 py-3 rounded-lg hover:bg-indigo-700 disabled:opacity-50 w-full"
             >
               {loading ? "Saving..." : "Save Tier Rule"}
             </button>
@@ -277,8 +277,8 @@ const TierManagement = () => {
       {/* Customers Table */}
       <section className="w-full">
         <h2 className="text-3xl font-bold mb-6 text-indigo-700">Customers & Tiers</h2>
-        <div className="flex justify-between items-center mb-6">
-          <div className="flex items-center bg-white px-4 py-3 rounded shadow w-1/3">
+        <div className="flex flex-col md:flex-row justify-between items-center mb-6 space-y-4 md:space-y-0 md:space-x-4">
+          <div className="flex items-center bg-white px-4 py-3 rounded shadow w-full md:w-1/3">
             <Search className="w-5 h-5 text-gray-400" />
             <input
               type="text"
@@ -288,12 +288,12 @@ const TierManagement = () => {
               className="ml-2 w-full outline-none"
             />
           </div>
-          <div>
+          <div className="w-full md:w-auto">
             <label className="mr-2 text-sm font-semibold">Sort By:</label>
             <select
               value={sortBy}
               onChange={(e) => setSortBy(e.target.value)}
-              className="border p-3 rounded"
+              className="border p-3 rounded w-full md:w-auto"
             >
               <option value="name">Name</option>
               <option value="tier">Tier</option>
@@ -302,7 +302,7 @@ const TierManagement = () => {
         </div>
 
         <div className="overflow-x-auto bg-white rounded-xl shadow w-full">
-          <table className="w-full text-left">
+          <table className="w-full min-w-[600px] text-left">
             <thead>
               <tr className="bg-gray-100">
                 <th className="px-6 py-3 text-sm font-semibold">Name</th>
@@ -315,8 +315,8 @@ const TierManagement = () => {
             <tbody>
               {filteredCustomers.map((customer) => (
                 <tr key={customer._id} className="border-t hover:bg-gray-50">
-                  <td className="px-6 py-3">{customer.name}</td>
-                  <td className="px-6 py-3">{customer.email}</td>
+                  <td className="px-6 py-3 break-words">{customer.name}</td>
+                  <td className="px-6 py-3 break-words">{customer.email}</td>
                   <td className="px-6 py-3">
                     {customer.tier ? (
                       <span
@@ -340,7 +340,7 @@ const TierManagement = () => {
                       onChange={(e) =>
                         handleCustomerTierChange(customer._id, e.target.value)
                       }
-                      className="border p-2 rounded"
+                      className="border p-2 rounded w-full"
                     >
                       <option value="">No tier</option>
                       {tierRules.map((rule) => (
@@ -354,7 +354,7 @@ const TierManagement = () => {
                     <button
                       disabled={updatingTierFor === customer._id}
                       onClick={() => saveCustomerTier(customer._id, customer.tier)}
-                      className="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700 disabled:opacity-50"
+                      className="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700 disabled:opacity-50 w-full"
                     >
                       {updatingTierFor === customer._id ? "Saving..." : "Save"}
                     </button>

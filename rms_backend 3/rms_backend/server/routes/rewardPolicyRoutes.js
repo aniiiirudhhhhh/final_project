@@ -8,6 +8,7 @@ const {
   getPolicySummary,
   addOrUpdateTierRule,
   getTierRules,
+  getCustomerTierRules
 } = require("../controllers/rewardPolicyController");
 const { protect, isAdmin } = require("../middleware/authMiddleware");
 
@@ -39,6 +40,7 @@ router.get("/tier", protect, isAdmin, getTierRules);
 
 // Policy summary
 router.get("/summary", protect, isAdmin, getPolicySummary);
+router.get("/customer-tier-rules/:adminId", protect,getCustomerTierRules);
 
 // ---------------- Customer-facing Route ----------------
 router.get("/customer-rules/:adminId", protect, async (req, res) => {

@@ -8,7 +8,6 @@ const User = require("../models/User");
 const addTransaction = async (req, res) => {
   try {
     const customerId = req.user._id;
-    // default redeemPoints = 0 if not provided
     const { amount, category, redeemPoints = 0, adminId } = req.body;
 
     if (!adminId) return res.status(400).json({ message: "Admin ID is required" });
@@ -59,41 +58,50 @@ const addTransaction = async (req, res) => {
       customer.pointsHistory.push({ points: earnedPoints, redeemed: false, expiresAt });
     }
 
-    // --- Redeem Points ---
-    let remaining = redeemPoints || 0; // ensure default 0
+    // --- Calculate maximum points that can be redeemed based on amount and redemption rate ---
+    const redemptionRate = Number(policy.redemptionRate ?? 1);
+    const maxPointsToRedeem = Math.min(Number(redeemPoints), Math.floor(amount / redemptionRate));
+
     const availablePoints = customer.pointsHistory
       .filter(p => !p.redeemed && p.expiresAt > now)
       .reduce((sum, p) => sum + p.points, 0);
 
-    if (remaining > availablePoints) {
+    if (maxPointsToRedeem > availablePoints) {
       return res.status(400).json({ message: "Not enough valid points to redeem" });
     }
 
-    // Redeem points from oldest unredeemed, unexpired points first
+    // --- Redeem up to maxPointsToRedeem ---
+    let remainingPointsToRedeem = maxPointsToRedeem;
+    let actualRedeemedPoints = 0;
     for (const entry of customer.pointsHistory) {
-      if (remaining <= 0) break;
+      if (remainingPointsToRedeem <= 0) break;
       if (entry.redeemed || entry.expiresAt <= now) continue;
 
-      if (entry.points <= remaining) {
-        remaining -= entry.points;
+      if (entry.points <= remainingPointsToRedeem) {
+        actualRedeemedPoints += entry.points;
+        remainingPointsToRedeem -= entry.points;
+        entry.points = 0;
         entry.redeemed = true;
       } else {
-        entry.points -= remaining;
-        remaining = 0;
+        entry.points -= remainingPointsToRedeem;
+        actualRedeemedPoints += remainingPointsToRedeem;
+        remainingPointsToRedeem = 0;
       }
     }
 
-    // Use policy redemptionRate (points to currency)
-    const redemptionRate = policy.redemptionRate || 1; // default 1 currency unit per point
-    const redeemedAmount = redeemPoints * redemptionRate;
+    // Remove zero points entries that are redeemed
+    customer.pointsHistory = customer.pointsHistory.filter(p => p.points > 0 || !p.redeemed);
+
+    // --- Calculate redeemed amount and final amount ---
+    const redeemedAmount = actualRedeemedPoints * redemptionRate;
     const finalAmount = Math.max(0, amount - redeemedAmount);
 
-    // --- Update Points Balance ---
+    // --- Update points balance ---
     customer.pointsBalance = customer.pointsHistory
       .filter(p => !p.redeemed && p.expiresAt > now)
       .reduce((sum, p) => sum + p.points, 0);
 
-    // --- Auto-assign Tier ---
+    // --- Auto-assign tier based on points balance ---
     if (policy.tierRules?.length) {
       const sortedTiers = [...policy.tierRules].sort((a, b) => b.minPoints - a.minPoints);
       for (const tierRule of sortedTiers) {
@@ -113,7 +121,7 @@ const addTransaction = async (req, res) => {
       amount,
       category,
       earnedPoints,
-      redeemedPoints: redeemPoints || 0, // always defined
+      redeemedPoints: actualRedeemedPoints,
       redeemedAmount,
       finalAmount,
       finalPoints: customer.pointsBalance,
@@ -142,6 +150,7 @@ const addTransaction = async (req, res) => {
     res.status(500).json({ message: err.message });
   }
 };
+
 
 // =========================
 // Other Controllers (unchanged)

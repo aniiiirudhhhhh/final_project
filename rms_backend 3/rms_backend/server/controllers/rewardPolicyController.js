@@ -171,3 +171,18 @@ exports.deletePolicy = async (req, res) => {
     res.status(500).json({ message: err.message });
   }
 };
+
+
+exports.getCustomerTierRules = async (req, res) => {
+  try {
+    const { adminId } = req.params;
+    const policy = await RewardPolicy.findOne({ adminId });
+    if (!policy) return res.status(404).json({ message: "Policy not found for this business" });
+
+    // Return only tierRules which include benefits
+    res.json({ tierRules: policy.tierRules || [] });
+  } catch (err) {
+    console.error("Error fetching customer tier rules:", err);
+    res.status(500).json({ message: "Server error fetching tier rules" });
+  }
+};
