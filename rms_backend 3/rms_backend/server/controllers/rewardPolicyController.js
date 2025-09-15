@@ -47,7 +47,7 @@ exports.updatePointsExpiry = async (req, res) => {
 exports.addOrUpdateThreshold = async (req, res) => {
   try {
     const adminId = req.user.id;
-    const { minAmount, bonusPoints } = req.body;//aa
+    const { minAmount, bonusPoints } = req.body;
 
     let policy = await RewardPolicy.findOne({ adminId });
     if (!policy) return res.status(404).json({ message: "No policy found. Create one first." });
@@ -66,20 +66,22 @@ exports.addOrUpdateThreshold = async (req, res) => {
   }
 };
 
-// Add or update category rule
+// Add or update category rule (dynamic unit and points per unit)
 exports.addOrUpdateCategoryRule = async (req, res) => {
   try {
     const adminId = req.user.id;
-    const { category, pointsPer100, minAmount, bonusPoints } = req.body;
+    const { category, unit, pointsPerUnit, minAmount, bonusPoints } = req.body;
 
     let policy = await RewardPolicy.findOne({ adminId });
     if (!policy) return res.status(404).json({ message: "No policy found. Please create one first." });
 
     const categoryIndex = policy.categoryRules.findIndex(rule => rule.category === category);
+    const newRule = { category, unit, pointsPerUnit, minAmount, bonusPoints };
+
     if (categoryIndex !== -1) {
-      policy.categoryRules[categoryIndex] = { category, pointsPer100, minAmount, bonusPoints };
+      policy.categoryRules[categoryIndex] = newRule;
     } else {
-      policy.categoryRules.push({ category, pointsPer100, minAmount, bonusPoints });
+      policy.categoryRules.push(newRule);
     }
 
     await policy.save();
@@ -171,7 +173,6 @@ exports.deletePolicy = async (req, res) => {
     res.status(500).json({ message: err.message });
   }
 };
-
 
 exports.getCustomerTierRules = async (req, res) => {
   try {

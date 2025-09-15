@@ -1,9 +1,9 @@
 const User = require("../models/User");
 const jwt = require("jsonwebtoken");
-
-// generate JWT token
+const { revokeToken } = require('./path/to/authMiddlewareFile');
+// generate JWT token (expires in 7 days)
 const generateToken = (id, role) => {
-  return jwt.sign({ id, role }, process.env.JWT_SECRET, { expiresIn: "7d" });
+  return jwt.sign({ id, role }, process.env.JWT_SECRET, { expiresIn: "15m" });
 };
 
 // @desc Register Admin
@@ -26,7 +26,7 @@ exports.registerAdmin = async (req, res) => {
       name: admin.name,
       email: admin.email,
       role: admin.role,
-      token: generateToken(admin._id, admin.role)
+      token: generateToken(admin._id, admin.role),
     });
   } catch (err) {
     res.status(500).json({ message: err.message });
@@ -54,9 +54,17 @@ exports.loginAdmin = async (req, res) => {
       name: admin.name,
       email: admin.email,
       role: admin.role,
-      token: generateToken(admin._id, admin.role)
+      token: generateToken(admin._id, admin.role),
     });
   } catch (err) {
     res.status(500).json({ message: err.message });
   }
+};
+
+exports.logoutAdmin = (req, res) => {
+  const token = req.headers.authorization?.split(" ")[1];
+  if (token) {
+    revokeToken(token);
+  }
+  res.json({ message: "Logged out successfully" });
 };

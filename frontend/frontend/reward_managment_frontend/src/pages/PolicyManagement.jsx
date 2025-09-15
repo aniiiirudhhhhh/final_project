@@ -4,13 +4,13 @@ import API from "../api";
 import { FileText, Tag, Gift } from "lucide-react";
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from "recharts";
 
-
 const PolicyManagement = () => {
   const [policy, setPolicy] = useState(null);
   const [form, setForm] = useState({
     policyName: "",
     description: "",
-    basePointsPer100: "",
+    baseUnit: "",
+    basePointsPerUnit: "",
     redemptionRate: "",
     minRedeemPoints: "",
     pointsExpiryDays: "",
@@ -21,7 +21,8 @@ const PolicyManagement = () => {
   const [categoryRules, setCategoryRules] = useState([]);
   const [categoryForm, setCategoryForm] = useState({
     category: "",
-    pointsPer100: "",
+    unit: "",
+    pointsPerUnit: "",
     minAmount: "",
     bonusPoints: "",
   });
@@ -57,7 +58,8 @@ const PolicyManagement = () => {
       setForm({
         policyName: res.data.policyName || "",
         description: res.data.description || "",
-        basePointsPer100: res.data.basePointsPer100 || "",
+        baseUnit: res.data.baseUnit || "",
+        basePointsPerUnit: res.data.basePointsPerUnit || "",
         redemptionRate: res.data.redemptionRate || "",
         minRedeemPoints: res.data.minRedeemPoints || "",
         pointsExpiryDays: res.data.pointsExpiryDays || "",
@@ -76,12 +78,21 @@ const PolicyManagement = () => {
   const handleSave = async () => {
     try {
       setLoading(true);
-      const res = await API.post("/admin/policy", form, {
+      const payload = {
+        ...form,
+        baseUnit: Number(form.baseUnit),
+        basePointsPerUnit: Number(form.basePointsPerUnit),
+        redemptionRate: Number(form.redemptionRate),
+        minRedeemPoints: Number(form.minRedeemPoints),
+        pointsExpiryDays: Number(form.pointsExpiryDays),
+      };
+
+      const res = await API.post("/admin/policy", payload, {
         headers: { Authorization: `Bearer ${token}` },
       });
       setPolicy(res.data.policy);
       alert(res.data.message || "Policy saved successfully");
-    } catch (err) {
+    } catch {
       alert("Error saving policy");
     } finally {
       setLoading(false);
@@ -99,14 +110,15 @@ const PolicyManagement = () => {
       setForm({
         policyName: "",
         description: "",
-        basePointsPer100: "",
+        baseUnit: "",
+        basePointsPerUnit: "",
         redemptionRate: "",
         minRedeemPoints: "",
         pointsExpiryDays: "",
       });
       setCategoryRules([]);
       setThresholds([]);
-    } catch (err) {
+    } catch {
       alert("Error deleting policy");
     }
   };
@@ -116,7 +128,7 @@ const PolicyManagement = () => {
       const res = await API.get("/admin/policy", { headers: { Authorization: `Bearer ${token}` } });
       setCategoryRules(res.data.categoryRules || []);
       setCategoryError("");
-    } catch (err) {
+    } catch {
       setCategoryError("Failed to fetch category rules");
     }
   };
@@ -132,7 +144,8 @@ const PolicyManagement = () => {
       setCategoryLoading(true);
       const payload = {
         category: categoryForm.category,
-        pointsPer100: Number(categoryForm.pointsPer100),
+        unit: Number(categoryForm.unit),
+        pointsPerUnit: Number(categoryForm.pointsPerUnit),
         minAmount: Number(categoryForm.minAmount),
         bonusPoints: Number(categoryForm.bonusPoints),
       };
@@ -141,8 +154,8 @@ const PolicyManagement = () => {
       });
       alert(res.data.message || "Category rule saved");
       fetchCategoryRules();
-      setCategoryForm({ category: "", pointsPer100: "", minAmount: "", bonusPoints: "" });
-    } catch (err) {
+      setCategoryForm({ category: "", unit: "", pointsPerUnit: "", minAmount: "", bonusPoints: "" });
+    } catch {
       alert("Error saving category rule");
     } finally {
       setCategoryLoading(false);
@@ -154,7 +167,7 @@ const PolicyManagement = () => {
       const res = await API.get("/admin/policy", { headers: { Authorization: `Bearer ${token}` } });
       setThresholds(res.data.spendThresholds || []);
       setThresholdError("");
-    } catch (err) {
+    } catch {
       setThresholdError("Failed to fetch spend thresholds");
     }
   };
@@ -178,14 +191,14 @@ const PolicyManagement = () => {
       alert(res.data.message || "Threshold rule saved");
       fetchThresholds();
       setThresholdForm({ minAmount: "", bonusPoints: "" });
-    } catch (err) {
+    } catch {
       alert("Error saving threshold rule");
     } finally {
       setThresholdLoading(false);
     }
   };
 
-  const COLORS = ["#6366f1", "#22c55e", "#ef4444", "#fbbf24"]; // TierManagement colors
+  const COLORS = ["#6366f1", "#22c55e", "#ef4444", "#fbbf24"];
 
   return (
     <div className="w-screen h-screen flex flex-col bg-gradient-to-br from-blue-50 to-indigo-100">
@@ -236,15 +249,30 @@ const PolicyManagement = () => {
               </div>
 
               <div className="flex flex-col">
-                <label htmlFor="basePointsPer100" className="mb-1 font-semibold text-gray-700">
-                  Base Points per 100
+                <label htmlFor="baseUnit" className="mb-1 font-semibold text-gray-700">
+                  Base Unit
                 </label>
                 <input
                   type="number"
-                  id="basePointsPer100"
-                  name="basePointsPer100"
-                  placeholder="Base Points per 100"
-                  value={form.basePointsPer100}
+                  id="baseUnit"
+                  name="baseUnit"
+                  placeholder="Base Unit"
+                  value={form.baseUnit}
+                  onChange={handleChange}
+                  className="border p-2 rounded"
+                />
+              </div>
+
+              <div className="flex flex-col">
+                <label htmlFor="basePointsPerUnit" className="mb-1 font-semibold text-gray-700">
+                  Base Points per Unit
+                </label>
+                <input
+                  type="number"
+                  id="basePointsPerUnit"
+                  name="basePointsPerUnit"
+                  placeholder="Base Points per Unit"
+                  value={form.basePointsPerUnit}
                   onChange={handleChange}
                   className="border p-2 rounded"
                 />
@@ -353,7 +381,7 @@ const PolicyManagement = () => {
                   {categoryRules.map((rule) => (
                     <li key={rule.category} className="border rounded p-2 bg-green-50 flex justify-between items-center">
                       <div>
-                        <strong>{rule.category}</strong> — Points/100: {rule.pointsPer100}, Min: ${rule.minAmount}
+                        <strong>{rule.category}</strong> — Points/Unit: {rule.pointsPerUnit}, Unit: {rule.unit}, Min: ₹{rule.minAmount}
                       </div>
                       {rule.bonusPoints > 0 && (
                         <span className="bg-green-200 text-green-800 px-2 py-1 rounded-full text-sm font-medium">
@@ -375,9 +403,17 @@ const PolicyManagement = () => {
                   />
                   <input
                     type="number"
-                    name="pointsPer100"
-                    placeholder="Points per 100 Spent"
-                    value={categoryForm.pointsPer100}
+                    name="unit"
+                    placeholder="Unit (e.g., 1, 5, 50)"
+                    value={categoryForm.unit}
+                    onChange={handleCategoryChange}
+                    className="border p-2 w-full rounded"
+                  />
+                  <input
+                    type="number"
+                    name="pointsPerUnit"
+                    placeholder="Points per Unit"
+                    value={categoryForm.pointsPerUnit}
                     onChange={handleCategoryChange}
                     className="border p-2 w-full rounded"
                   />
@@ -430,7 +466,7 @@ const PolicyManagement = () => {
                 <ul className="mb-4 space-y-2 max-h-48 overflow-auto border p-3 rounded">
                   {thresholds.map((rule, idx) => (
                     <li key={idx} className="border rounded p-2 bg-purple-50 flex justify-between items-center">
-                      Minimum Spend: ${rule.minAmount}
+                      Minimum Spend: ₹{rule.minAmount}
                       <span className="bg-purple-200 text-purple-800 px-2 py-1 rounded-full text-sm font-medium">
                         +{rule.bonusPoints} ⭐
                       </span>
@@ -476,26 +512,25 @@ const PolicyManagement = () => {
               <div className="mt-6 h-40 w-40 mx-auto">
                 <ResponsiveContainer width="100%" height="100%">
                   <PieChart>
-  <Pie
-    data={thresholds.map((t, i) => ({
-      name: `Tier ${i + 1}`,
-      value: t.bonusPoints,
-    }))}
-    dataKey="value"
-    nameKey="name"
-    outerRadius={70}
-    label={({ name, value, percent }) =>
-      `${name}: ${value} (${(percent * 100).toFixed(0)}%)`
-    } // 👈 Show Tier, points, and percentage
-    labelLine={false} // 👈 cleaner look
-  >
-    {thresholds.map((t, i) => (
-      <Cell key={i} fill={COLORS[i % COLORS.length]} />
-    ))}
-  </Pie>
-  <Tooltip formatter={(value, name) => [`${value} pts`, name]} />
-</PieChart>
-
+                    <Pie
+                      data={thresholds.map((t, i) => ({
+                        name: `Tier ${i + 1}`,
+                        value: t.bonusPoints,
+                      }))}
+                      dataKey="value"
+                      nameKey="name"
+                      outerRadius={70}
+                      label={({ name, value, percent }) =>
+                        `${name}: ${value} (${(percent * 100).toFixed(0)}%)`
+                      }
+                      labelLine={false}
+                    >
+                      {thresholds.map((t, i) => (
+                        <Cell key={i} fill={COLORS[i % COLORS.length]} />
+                      ))}
+                    </Pie>
+                    <Tooltip formatter={(value, name) => [`${value} pts`, name]} />
+                  </PieChart>
                 </ResponsiveContainer>
               </div>
             )}

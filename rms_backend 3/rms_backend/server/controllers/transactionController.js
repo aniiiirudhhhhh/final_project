@@ -28,15 +28,19 @@ const addTransaction = async (req, res) => {
       if (tierRule) tierMultiplier = tierRule.multiplier;
     }
 
-    // --- Base Points ---
-    const basePoints = Math.floor((amount / 100) * (policy.basePointsPer100 || 0));
+    // --- Base Points (dynamic unit) ---
+    const baseUnit = policy.baseUnit || 1; // e.g., 1, 5, 50, 100
+    const basePointsPerUnit = policy.basePointsPerUnit || 0;
+    const basePoints = Math.floor((amount / baseUnit) * basePointsPerUnit);
 
-    // --- Category Points ---
+    // --- Category Points (dynamic unit) ---
     let categoryPoints = 0;
     if (category) {
       const categoryRule = policy.categoryRules?.find(c => c.category === category);
-      if (categoryRule && amount >= categoryRule.minAmount) {
-        categoryPoints = Math.floor((amount / 100) * categoryRule.pointsPer100) + (categoryRule.bonusPoints || 0);
+      if (categoryRule && amount >= (categoryRule.minAmount || 0)) {
+        const categoryUnit = categoryRule.unit || 1; 
+        const pointsPerUnit = categoryRule.pointsPerUnit || 0;
+        categoryPoints = Math.floor((amount / categoryUnit) * pointsPerUnit) + (categoryRule.bonusPoints || 0);
       }
     }
 
@@ -58,10 +62,11 @@ const addTransaction = async (req, res) => {
       customer.pointsHistory.push({ points: earnedPoints, redeemed: false, expiresAt });
     }
 
-    // --- Calculate maximum points that can be redeemed based on amount and redemption rate ---
+    // --- Calculate max points to redeem ---
     const redemptionRate = Number(policy.redemptionRate ?? 1);
     const maxPointsToRedeem = Math.min(Number(redeemPoints), Math.floor(amount / redemptionRate));
 
+    // Available valid points
     const availablePoints = customer.pointsHistory
       .filter(p => !p.redeemed && p.expiresAt > now)
       .reduce((sum, p) => sum + p.points, 0);
@@ -70,7 +75,7 @@ const addTransaction = async (req, res) => {
       return res.status(400).json({ message: "Not enough valid points to redeem" });
     }
 
-    // --- Redeem up to maxPointsToRedeem ---
+    // --- Redeem points ---
     let remainingPointsToRedeem = maxPointsToRedeem;
     let actualRedeemedPoints = 0;
     for (const entry of customer.pointsHistory) {
@@ -92,7 +97,7 @@ const addTransaction = async (req, res) => {
     // Remove zero points entries that are redeemed
     customer.pointsHistory = customer.pointsHistory.filter(p => p.points > 0 || !p.redeemed);
 
-    // --- Calculate redeemed amount and final amount ---
+    // --- Calculate redemption amounts ---
     const redeemedAmount = actualRedeemedPoints * redemptionRate;
     const finalAmount = Math.max(0, amount - redeemedAmount);
 
@@ -101,7 +106,7 @@ const addTransaction = async (req, res) => {
       .filter(p => !p.redeemed && p.expiresAt > now)
       .reduce((sum, p) => sum + p.points, 0);
 
-    // --- Auto-assign tier based on points balance ---
+    // --- Auto-assign tier ---
     if (policy.tierRules?.length) {
       const sortedTiers = [...policy.tierRules].sort((a, b) => b.minPoints - a.minPoints);
       for (const tierRule of sortedTiers) {
@@ -114,7 +119,7 @@ const addTransaction = async (req, res) => {
 
     await customer.save();
 
-    // --- Save Transaction ---
+    // --- Save the transaction ---
     const transaction = await Transaction.create({
       adminId,
       customerId,

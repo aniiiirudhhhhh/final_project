@@ -9,7 +9,8 @@ dotenv.config();
 
 const app = express();
 app.use(express.json());
-app.use(cors({ origin: "http://localhost:5173" }));
+// app.use(cors({ origin: "http://localhost:5173" }));
+app.use(cors({ origin: "*" })); // Allow all origins for testing
 
 // Razorpay instance
 const razorpay = new Razorpay({
@@ -79,6 +80,11 @@ app.use("/transactions", transactionRoutes);
 
 const customerRoutes = require("./server/routes/customerRoutes");
 app.use("/customer", customerRoutes);
+// const spinWheelRoutes = require("./server/routes/spinWheelRoutes");
+// app.use("/spin-wheel", spinWheelRoutes);
+
+// const customerPolicyRoutes = require("./server/routes/customerPolicyRoutes");
+// app.use("/customer", customerPolicyRoutes);
 
 // MongoDB connection
 mongoose
